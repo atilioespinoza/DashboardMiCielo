@@ -10,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
   }
 
-  const cacheKey = 'operations_data';
+  const cacheKey = 'operations_data_v2';
   const cachedData = await getCache(cacheKey);
   if (cachedData) {
     return NextResponse.json({ success: true, data: cachedData, cached: true });
@@ -36,13 +36,14 @@ export async function GET() {
             }
           }
         }
-        orders(first: 50, query: "fulfillment_status:unfulfilled OR fulfillment_status:partial") {
+        orders(first: 50, query: "status:open (fulfillment_status:unfulfilled OR fulfillment_status:partial)") {
           edges {
             node {
               id
               name
               createdAt
               displayFulfillmentStatus
+              cancelledAt
             }
           }
         }
