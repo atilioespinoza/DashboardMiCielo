@@ -55,16 +55,19 @@ export async function GET(request: Request) {
         let hasNextPage = true;
         let cursor = null;
 
-        // Obtenemos historial (limitado a 2000 órdenes para el MVP)
+        // Obtenemos historial (Aumentamos a 80 iteraciones = 20,000 órdenes para cubrir periodos largos como 24 meses)
         let iterations = 0;
-        while (hasNextPage && iterations < 8) {
+        while (hasNextPage && iterations < 80) {
             const resp = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Shopify-Access-Token': accessToken,
                 },
-                body: JSON.stringify({ query, variables: { cursor } }),
+                body: JSON.stringify({
+                    query: query.replace('orders(', 'orders(reverse: true, '), // Obtener las más recientes primero
+                    variables: { cursor }
+                }),
             });
 
             const result: any = await resp.json();
