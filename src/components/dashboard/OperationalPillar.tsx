@@ -478,10 +478,10 @@ export default function OperationalPillar() {
                                                             <AlertTriangle size={12} /> COSTO 0
                                                         </div>
                                                     )}
-                                                    {/* Alert: If margin percentage is suspiciously low (<10%) */}
-                                                    {p.margin / p.sales < 0.1 && Math.abs(p.sales - p.margin) > 1 && (
+                                                    {/* Alert: If margin percentage is suspiciously low (<50%) */}
+                                                    {p.margin / p.sales < 0.5 && Math.abs(p.sales - p.margin) > 1 && (
                                                         <div
-                                                            title="ADVERTENCIA: Margen sospechosamente bajo (<10%). Revisar costos en Shopify."
+                                                            title="ADVERTENCIA: Margen inferior al 50%. Revisar costos en Shopify."
                                                             style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
                                                         >
                                                             <HelpCircle size={12} /> MARGEN BAJO
