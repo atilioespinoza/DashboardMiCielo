@@ -77,7 +77,7 @@ export async function GET(request: Request) {
         }
 
         const dailyData: Record<string, { sales: number, margin: number }> = {};
-        const productHistorical: Record<string, Record<string, { sales: number, margin: number }>> = {};
+        const productHistorical: Record<string, Record<string, { sales: number, margin: number, quantity: number }>> = {};
 
         allOrders.forEach(({ node }: any) => {
             if (node.cancelledAt) return;
@@ -106,10 +106,11 @@ export async function GET(request: Request) {
                 dailyData[month].margin += lineMargin;
 
                 if (!productHistorical[fullName]) productHistorical[fullName] = {};
-                if (!productHistorical[fullName][month]) productHistorical[fullName][month] = { sales: 0, margin: 0 };
+                if (!productHistorical[fullName][month]) productHistorical[fullName][month] = { sales: 0, margin: 0, quantity: 0 };
 
                 productHistorical[fullName][month].sales += lineSales;
                 productHistorical[fullName][month].margin += lineMargin;
+                productHistorical[fullName][month].quantity += item.quantity;
             });
         });
 
@@ -152,7 +153,8 @@ export async function GET(request: Request) {
             byProduct: paretoProducts.map(p => {
                 const history = monthsPresent.map(m => ({
                     month: m,
-                    val: productHistorical[p.name][m]?.sales || 0
+                    val: productHistorical[p.name][m]?.sales || 0,
+                    qty: productHistorical[p.name][m]?.quantity || 0
                 }));
                 const marginHistory = monthsPresent.map(m => ({
                     month: m,

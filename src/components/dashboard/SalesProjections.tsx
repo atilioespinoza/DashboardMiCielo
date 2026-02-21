@@ -223,33 +223,86 @@ export default function SalesProjections() {
             </div>
 
             {/* Top 5 Products Detailed Behavior */}
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '-8px' }}>
-                Comportamiento Individual: Top 5 Productos
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-8px' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Comportamiento Individual: Top 5 Productos
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 700, backgroundColor: 'var(--bg-tertiary)', padding: '4px 12px', borderRadius: '20px' }}>
+                    Últimos 6 Meses
+                </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                 {data.paretoAnalysis.products.slice(0, 5).map((p, i) => (
                     <Card key={i} title={p.name} style={{ padding: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: p.trend > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                                {p.trend > 0 ? '+' : ''}{Math.round((p.trend / (p.projectedSales || 1)) * 100)}% trend
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>Cierre Proyectado</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: p.trend > 0 ? 'var(--success)' : 'var(--danger)', display: 'flex', alignItems: 'center', gap: '2px', justifyContent: 'flex-end' }}>
+                                    {p.trend > 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                                    {p.trend > 0 ? '+' : ''}{Math.round((p.trend / (p.projectedSales || 1)) * 100)}%
+                                </div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>Trend mensual</div>
                             </div>
                         </div>
-                        <div style={{ height: '80px', width: '100%' }}>
+
+                        <div style={{ height: '140px', width: '100%', marginTop: '10px' }}>
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={p.history}>
+                                <AreaChart data={p.history} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id={`color-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={p.trend > 0 ? '#10b981' : '#ef4444'} stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor={p.trend > 0 ? '#10b981' : '#ef4444'} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid vertical={false} stroke="var(--border-color)" strokeDasharray="3 3" opacity={0.3} />
+                                    <XAxis
+                                        dataKey="month"
+                                        hide={false}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 9, fill: 'var(--text-tertiary)', fontWeight: 700 }}
+                                        tickFormatter={(val) => val.split('-')[1] === '01' ? val.split('-')[0] : val.split('-')[1]} // Simplifica MM o YYYY
+                                    />
+                                    <YAxis hide={true} domain={['dataMin', 'dataMax']} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-md)', padding: '10px', fontSize: '11px' }}
+                                        formatter={(value: any, name: string | undefined) => {
+                                            if (name === 'Venta Neto') return [formatCurrency(value), name];
+                                            if (name === 'Unidades') return [value, name];
+                                            return [value, name || ''];
+                                        }}
+                                        labelFormatter={(label) => `Mes: ${label}`}
+                                        labelStyle={{ fontWeight: 800, marginBottom: '4px', color: 'var(--text-primary)' }}
+                                    />
                                     <Area
+                                        name="Venta Neto"
                                         type="monotone"
                                         dataKey="val"
                                         stroke={p.trend > 0 ? '#10b981' : '#ef4444'}
-                                        fill={p.trend > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}
-                                        strokeWidth={2}
+                                        fill={`url(#color-${i})`}
+                                        strokeWidth={3}
+                                        dot={false}
+                                        activeDot={{ r: 4, strokeWidth: 0, fill: p.trend > 0 ? '#10b981' : '#ef4444' }}
+                                    />
+                                    <Area
+                                        name="Unidades"
+                                        type="monotone"
+                                        dataKey="qty"
+                                        stroke="transparent"
+                                        fill="transparent"
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
-                        <div style={{ marginTop: '12px', fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>
-                            Proyecc. vs Histórico
+
+                        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                <span style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>Periodo:</span> {p.history[0]?.month} al {p.history[p.history.length - 1]?.month}
+                            </div>
                         </div>
                     </Card>
                 ))}
