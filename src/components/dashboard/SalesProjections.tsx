@@ -49,11 +49,13 @@ interface ProjectionData {
 export default function SalesProjections() {
     const [data, setData] = useState<ProjectionData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [months, setMonths] = useState(6);
 
     useEffect(() => {
         const fetchProjections = async () => {
+            setLoading(true);
             try {
-                const res = await fetch('/api/shopify/analytics/projections?months=6');
+                const res = await fetch(`/api/shopify/analytics/projections?months=${months}`);
                 const json = await res.json();
                 if (json.success) {
                     setData(json.data);
@@ -66,7 +68,7 @@ export default function SalesProjections() {
         };
 
         fetchProjections();
-    }, []);
+    }, [months]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
@@ -110,7 +112,7 @@ export default function SalesProjections() {
                         </div>
                         <h2 style={{ fontSize: '2.2rem', fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '-1px' }}>Proyección Mensual</h2>
                         <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9, fontWeight: 400, maxWidth: '500px', lineHeight: '1.4' }}>
-                            Basado en los últimos 6 meses de ventas, estimamos un cierre para este período de:
+                            Basado en los últimos {months} meses de ventas, estimamos un cierre para este período de:
                         </p>
                         <div style={{ marginTop: '24px', display: 'flex', alignItems: 'baseline', gap: '16px' }}>
                             <span style={{ fontSize: '3.2rem', fontWeight: 900, letterSpacing: '-2px' }}>
@@ -227,9 +229,27 @@ export default function SalesProjections() {
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                     Comportamiento Individual: Top 5 Productos
                 </h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 700, backgroundColor: 'var(--bg-tertiary)', padding: '4px 12px', borderRadius: '20px' }}>
-                    Últimos 6 Meses
-                </span>
+                <select
+                    value={months}
+                    onChange={(e) => setMonths(Number(e.target.value))}
+                    style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--brand-primary)',
+                        fontWeight: 800,
+                        backgroundColor: 'var(--bg-secondary)',
+                        padding: '6px 16px',
+                        borderRadius: '20px',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        boxShadow: 'var(--shadow-sm)'
+                    }}
+                >
+                    <option value={3}>Últimos 3 Meses</option>
+                    <option value={6}>Últimos 6 Meses</option>
+                    <option value={9}>Últimos 9 Meses</option>
+                    <option value={12}>Últimos 12 Meses</option>
+                </select>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
