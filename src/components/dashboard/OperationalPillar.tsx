@@ -23,6 +23,9 @@ interface OpData {
 }
 
 const PARETO_PERIODS = [
+    { id: 'mtd', label: 'Mes en Curso (MTD)', start: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`, end: '' },
+    { id: 'ytd', label: 'Ene - Hoy (YTD)', start: `${new Date().getFullYear()}-01-01`, end: '' },
+    { id: 'last12', label: 'Últimos 12 meses', start: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end: '' },
     { id: '2025', label: 'Año 2025', start: '2025-01-01', end: '2025-12-31' },
     { id: '2024', label: 'Año 2024', start: '2024-01-01', end: '2024-12-31' },
     { id: 'all', label: 'Todo el Histórico', start: '2024-01-01', end: '' },
