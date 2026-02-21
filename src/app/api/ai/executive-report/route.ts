@@ -22,14 +22,16 @@ export async function POST(req: NextRequest) {
                     ORDER BY report_type, created_at DESC
                 `;
 
-                // Formatear como objeto para pasar a la IA
+                // Formatear como objeto para pasar a la IA, truncando para no exceder límites de tokens
                 pillarReports = results.reduce((acc: any, row: any) => {
-                    acc[row.report_type] = row.content;
+                    // Truncar reporte a ~3000 caracteres para el contexto del CEO
+                    acc[row.report_type] = row.content.length > 3000
+                        ? row.content.substring(0, 3000) + "... [Reporte truncado para contexto]"
+                        : row.content;
                     return acc;
                 }, {});
             } catch (dbError) {
                 console.error("Failed to fetch pillar reports for CEO context:", dbError);
-                // No detenemos el proceso si falla esto, solo generamos con datos crudos
             }
         }
 

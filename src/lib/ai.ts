@@ -78,9 +78,16 @@ export async function generateSpecializedReport(
 
     try {
         const result = await model.generateContent(prompt);
-        return result.response.text();
-    } catch (error) {
-        console.error(`Error generating ${type} report:`, error);
+        const response = result.response;
+        return response.text();
+    } catch (error: any) {
+        console.error(`ERROR in generateSpecializedReport [${type}]:`, error);
+
+        // Revelar más detalles si es un error de seguridad o de la API
+        if (error.response && error.response.promptFeedback) {
+            console.error("Prompt Feedback:", error.response.promptFeedback);
+        }
+
         throw new Error("No se pudo generar el informe especializado en este momento.");
     }
 }
