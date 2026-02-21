@@ -19,6 +19,7 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
     const [showHistory, setShowHistory] = useState(false);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [selectedOldReport, setSelectedOldReport] = useState<string | null>(null);
+    const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen && !isGenerating) {
@@ -62,10 +63,7 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
         }
     };
 
-    const deleteReport = async (e: React.MouseEvent, reportId: string) => {
-        e.stopPropagation(); // Evitar que se cargue el reporte al intentar borrarlo
-        if (!confirm("¿Estás seguro de que deseas eliminar este reporte histórico?")) return;
-
+    const deleteReport = async (reportId: string) => {
         try {
             const res = await fetch(`/api/ai/reports?id=${reportId}`, {
                 method: 'DELETE'
@@ -73,6 +71,7 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
             const json = await res.json();
             if (json.success) {
                 setHistory(prev => prev.filter(h => h.id !== reportId));
+                setConfirmingId(null);
                 if (selectedOldReport && history.find(h => h.id === reportId)) {
                     setSelectedOldReport(null);
                 }
@@ -182,28 +181,45 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div
-                                                onClick={(e) => deleteReport(e, h.id)}
-                                                style={{
-                                                    padding: '6px',
-                                                    borderRadius: '8px',
-                                                    color: 'var(--text-tertiary)',
-                                                    transition: '0.2s',
-                                                    cursor: 'pointer'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.stopPropagation();
-                                                    e.currentTarget.style.backgroundColor = '#fee2e2';
-                                                    e.currentTarget.style.color = '#ef4444';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                                    e.currentTarget.style.color = 'var(--text-tertiary)';
-                                                }}
-                                                title="Eliminar reporte"
-                                            >
-                                                <Trash2 size={14} />
-                                            </div>
+                                            {confirmingId === h.id ? (
+                                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); deleteReport(h.id); }}
+                                                        style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                                    >
+                                                        SÍ
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setConfirmingId(null); }}
+                                                        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer' }}
+                                                    >
+                                                        NO
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    onClick={(e) => { e.stopPropagation(); setConfirmingId(h.id); }}
+                                                    style={{
+                                                        padding: '6px',
+                                                        borderRadius: '8px',
+                                                        color: 'var(--text-tertiary)',
+                                                        transition: '0.2s',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.stopPropagation();
+                                                        e.currentTarget.style.backgroundColor = '#fee2e2';
+                                                        e.currentTarget.style.color = '#ef4444';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                                        e.currentTarget.style.color = 'var(--text-tertiary)';
+                                                    }}
+                                                    title="Eliminar reporte"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </div>
+                                            )}
                                             <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
                                         </div>
                                     </div>
