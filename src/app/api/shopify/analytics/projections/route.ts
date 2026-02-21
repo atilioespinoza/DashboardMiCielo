@@ -127,6 +127,9 @@ export async function GET(request: Request) {
           if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
           else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
           else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
+          else if (upperName.includes("CUBRE PORTEO")) fullName = "Cubre Porteo (Total)";
+          else if (upperName.includes("MOCHILA DE PORTEO BABY") || upperName.includes("MOCHILA BABY")) fullName = "Mochila Baby (Total)";
+          else if (upperName.includes("UPA MAMI")) fullName = "Upa Mami (Total)";
 
           stockMap[fullName] = (stockMap[fullName] || 0) + (variant.inventoryQuantity || 0);
         });
@@ -156,6 +159,9 @@ export async function GET(request: Request) {
         if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
         else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
         else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
+        else if (upperName.includes("CUBRE PORTEO")) fullName = "Cubre Porteo (Total)";
+        else if (upperName.includes("MOCHILA DE PORTEO BABY") || upperName.includes("MOCHILA BABY")) fullName = "Mochila Baby (Total)";
+        else if (upperName.includes("UPA MAMI")) fullName = "Upa Mami (Total)";
 
         const price = parseFloat(item.originalUnitPriceSet.shopMoney.amount) / 1.19;
         const cost = parseFloat(item.variant?.inventoryItem?.unitCost?.amount || "0") / 1.19;
