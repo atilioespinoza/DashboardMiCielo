@@ -79,6 +79,51 @@ export async function GET(request: Request) {
             iterations++;
         }
 
+        // 3. Obtener Inventario Actual para calcular Rotación y Disponibilidad
+        const inventoryQuery = `
+          query GetInventory {
+            products(first: 250) {
+              edges {
+                node {
+                  title
+                  variants(first: 20) {
+                    edges {
+                      node {
+                        title
+                        inventoryQuantity
+                        product { title }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+
+        const inventoryResp = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
+            body: JSON.stringify({ query: inventoryQuery }),
+        });
+        const inventoryResult: any = await inventoryResp.json();
+        const stockMap: Record<string, number> = {};
+
+        inventoryResult.data?.products?.edges?.forEach(({ node: product }: any) => {
+            product.variants.edges.forEach(({ node: variant }: any) => {
+                const productTitle = variant.product?.title || product.title;
+                const variantTitle = variant.title !== 'Default Title' ? ` (${variant.title})` : '';
+                let fullName = `${productTitle}${variantTitle}`;
+
+                const upperName = fullName.toUpperCase();
+                if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
+                else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
+                else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
+
+                stockMap[fullName] = (stockMap[fullName] || 0) + variant.inventoryQuantity;
+            });
+        });
+
         const dailyData: Record<string, { sales: number, margin: number }> = {};
         const productHistorical: Record<string, Record<string, { sales: number, margin: number, quantity: number }>> = {};
 
@@ -163,12 +208,21 @@ export async function GET(request: Request) {
                     month: m,
                     val: productHistorical[p.name][m]?.margin || 0
                 }));
+
+                const totalQty = history.reduce((acc, h) => acc + h.qty, 0);
+                const dailyVelocity = totalQty / (monthsBack * 30);
+                const currentStock = stockMap[p.name] || 0;
+                const daysRemaining = dailyVelocity > 0 ? Math.round(currentStock / dailyVelocity) : 999;
+
                 return {
                     name: p.name,
                     projectedSales: project(history),
                     projectedMargin: project(marginHistory),
                     trend: ss.linearRegression(history.map((h, i) => [i, h.val])).m, // Pendiente
-                    history: history // Devolver historial completo para gráficos individuales
+                    history: history,
+                    stock: currentStock,
+                    velocity: dailyVelocity,
+                    daysOfStock: daysRemaining
                 };
             })
         };

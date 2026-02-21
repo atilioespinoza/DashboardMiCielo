@@ -41,7 +41,10 @@ interface ProjectionData {
             projectedSales: number;
             projectedMargin: number;
             trend: number;
-            history: { month: string; val: number }[];
+            stock: number;
+            daysOfStock: number;
+            velocity: number;
+            history: { month: string; val: number; qty: number }[];
         }[];
     };
 }
@@ -322,8 +325,24 @@ export default function SalesProjections() {
                         </div>
 
                         <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
-                                <span style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>Periodo:</span> {p.history[0]?.month} al {p.history[p.history.length - 1]?.month}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                    <span style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>Periodo:</span> {p.history[0]?.month} al {p.history[p.history.length - 1]?.month}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                    <span style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>Stock:</span> {p.stock} un.
+                                </div>
+                            </div>
+                            <div style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 800,
+                                color: p.daysOfStock < 20 ? 'white' : (p.daysOfStock < 45 ? 'var(--text-primary)' : 'var(--success)'),
+                                backgroundColor: p.daysOfStock < 20 ? '#ef4444' : (p.daysOfStock < 45 ? '#fbbf24' : 'rgba(16, 185, 129, 0.1)'),
+                                padding: '4px 10px',
+                                borderRadius: '8px',
+                                textAlign: 'center'
+                            }}>
+                                {p.daysOfStock > 365 ? '+1 año stock' : `${p.daysOfStock} días stock`}
                             </div>
                         </div>
                     </Card>
@@ -338,7 +357,8 @@ export default function SalesProjections() {
                             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                                 <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Producto</th>
                                 <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pronóstico Vta</th>
-                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Margen Est.</th>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Stock</th>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Días Rest.</th>
                                 <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Trend Histórico</th>
                             </tr>
                         </thead>
@@ -352,7 +372,16 @@ export default function SalesProjections() {
                                         <div style={{ fontWeight: 900, fontSize: '0.9rem', color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
                                     </td>
                                     <td style={{ padding: '20px 0' }}>
-                                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--success)' }}>{formatCurrency(p.projectedMargin)}</div>
+                                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{p.stock}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 0' }}>
+                                        <div style={{
+                                            fontWeight: 900,
+                                            fontSize: '0.85rem',
+                                            color: p.daysOfStock < 20 ? '#ef4444' : (p.daysOfStock < 45 ? '#d97706' : 'var(--success)')
+                                        }}>
+                                            {p.daysOfStock > 365 ? '+365' : p.daysOfStock} d.
+                                        </div>
                                     </td>
                                     <td style={{ padding: '20px 0', textAlign: 'right' }}>
                                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '30px', backgroundColor: 'var(--bg-tertiary)', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>
