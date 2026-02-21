@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
   }
 
-  const cacheKey = `brands_mix_v2_${monthsBack}`;
+  const cacheKey = `brands_mix_v3_${monthsBack}`;
   const cachedData = await getCache(cacheKey);
   if (cachedData) {
     return NextResponse.json({ success: true, data: cachedData, cached: true });
@@ -88,9 +88,13 @@ export async function GET(request: Request) {
         if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
         else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
         else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
+        else if (upperName.includes("CUBRE PORTEO")) fullName = "Cubre Porteo (Total)";
 
         // Force MiCielo for core manufactured products regardless of vendor tag
-        if (fullName === "Mochila Primera Etapa (Total)" || fullName === "Upa Go! (Total)" || fullName === "Mochila Toddler (Total)") {
+        if (fullName === "Mochila Primera Etapa (Total)" ||
+          fullName === "Upa Go! (Total)" ||
+          fullName === "Mochila Toddler (Total)" ||
+          fullName === "Cubre Porteo (Total)") {
           isMiCielo = true;
         }
 
