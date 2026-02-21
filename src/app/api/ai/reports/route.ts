@@ -51,3 +51,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const reportId = searchParams.get('id');
+
+        if (!reportId) {
+            return NextResponse.json({ success: false, error: "Report ID required" }, { status: 400 });
+        }
+
+        await sql`
+            DELETE FROM ai_reports WHERE id = ${reportId}
+        `;
+
+        return NextResponse.json({ success: true, message: "Report deleted successfully" });
+    } catch (error: any) {
+        console.error("Delete Report Error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}

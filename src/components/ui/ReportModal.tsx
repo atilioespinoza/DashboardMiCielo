@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { BrainCircuit, X, Download, History, Clock, ChevronRight } from 'lucide-react';
+import { BrainCircuit, X, Download, History, Clock, ChevronRight, Trash2 } from 'lucide-react';
 
 interface ReportModalProps {
     isOpen: boolean;
@@ -59,6 +59,26 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
             console.error("Error loading old report", e);
         } finally {
             setLoadingHistory(false);
+        }
+    };
+
+    const deleteReport = async (e: React.MouseEvent, reportId: string) => {
+        e.stopPropagation(); // Evitar que se cargue el reporte al intentar borrarlo
+        if (!confirm("¿Estás seguro de que deseas eliminar este reporte histórico?")) return;
+
+        try {
+            const res = await fetch(`/api/ai/reports?id=${reportId}`, {
+                method: 'DELETE'
+            });
+            const json = await res.json();
+            if (json.success) {
+                setHistory(prev => prev.filter(h => h.id !== reportId));
+                if (selectedOldReport && history.find(h => h.id === reportId)) {
+                    setSelectedOldReport(null);
+                }
+            }
+        } catch (e) {
+            console.error("Error deleting report", e);
         }
     };
 
@@ -161,7 +181,31 @@ export function ReportModal({ isOpen, onClose, report, isGenerating, type, title
                                                 {new Date(h.created_at).toLocaleDateString()} - {new Date(h.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>
-                                        <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div
+                                                onClick={(e) => deleteReport(e, h.id)}
+                                                style={{
+                                                    padding: '6px',
+                                                    borderRadius: '8px',
+                                                    color: 'var(--text-tertiary)',
+                                                    transition: '0.2s',
+                                                    cursor: 'pointer'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.stopPropagation();
+                                                    e.currentTarget.style.backgroundColor = '#fee2e2';
+                                                    e.currentTarget.style.color = '#ef4444';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                    e.currentTarget.style.color = 'var(--text-tertiary)';
+                                                }}
+                                                title="Eliminar reporte"
+                                            >
+                                                <Trash2 size={14} />
+                                            </div>
+                                            <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                        </div>
                                     </div>
                                 ))}
                                 {history.length === 0 && !loadingHistory && <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>No hay reportes guardados.</div>}
