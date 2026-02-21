@@ -13,11 +13,18 @@ import {
     BarChart, Bar, Cell, ComposedChart, Line, Area,
     PieChart, Pie
 } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { BrainCircuit, X } from 'lucide-react';
 
 export default function ExecutiveSummary() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState('mtd');
+
+    // AI Report States
+    const [report, setReport] = useState<string | null>(null);
+    const [showReport, setShowReport] = useState(false);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -37,6 +44,43 @@ export default function ExecutiveSummary() {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    const generateAIReport = async () => {
+        setGeneratingReport(true);
+        setShowReport(true);
+        try {
+            // Recopilar datos adicionales del P&L para un informe más rico
+            const pnlStructRes = await fetch('/api/pnl/structure');
+            const pnlValRes = await fetch('/api/pnl/values');
+            const pnlStruct = await pnlStructRes.json();
+            const pnlValues = await pnlValRes.json();
+
+            const fullContext = {
+                analytics: data,
+                financials: {
+                    structure: pnlStruct.success ? pnlStruct.data : [],
+                    values: pnlValues.success ? pnlValues.data : {}
+                }
+            };
+
+            const res = await fetch('/api/ai/executive-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dashboardData: fullContext })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setReport(json.report);
+            } else {
+                setReport("Error al generar el informe: " + json.error);
+            }
+        } catch (e) {
+            console.error("AI Report Error", e);
+            setReport("Error técnico al conectar con la IA.");
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
@@ -402,6 +446,24 @@ export default function ExecutiveSummary() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '16px' }}>
+                    <button
+                        onClick={generateAIReport}
+                        style={{
+                            padding: '10px 24px',
+                            borderRadius: '30px',
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                        }}
+                    >
+                        <BrainCircuit size={16} /> INFORME CEO (IA)
+                    </button>
                     <div style={{ padding: '10px 24px', borderRadius: '30px', background: 'var(--bg-tertiary)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
                         SYNC: OK
                     </div>
@@ -410,6 +472,71 @@ export default function ExecutiveSummary() {
                     </button>
                 </div>
             </div>
+
+            {/* AI Report Modal */}
+            {showReport && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+                    zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '24px', animation: 'fadeIn 0.3s ease-out'
+                }}>
+                    <div style={{
+                        width: '100%', maxWidth: '900px', maxHeight: '85vh',
+                        backgroundColor: 'white', borderRadius: '32px',
+                        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                        boxShadow: '0 30px 60px -12px rgba(0,0,0,0.25)',
+                        border: '1px solid var(--border-color)'
+                    }}>
+                        <div style={{
+                            padding: '24px 32px', borderBottom: '1px solid var(--border-color)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            background: 'linear-gradient(to right, #fafafa, #ffffff)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: '#7c3aed' }}>
+                                    <BrainCircuit size={24} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900 }}>Informe Estratégico CEO</h3>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Generado por Inteligencia Artificial</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowReport(false)}
+                                style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '50%', color: 'var(--text-tertiary)', cursor: 'pointer', border: 'none' }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div style={{
+                            padding: '40px', overflowY: 'auto', flex: 1,
+                            lineHeight: '1.8', color: 'var(--text-secondary)'
+                        }}>
+                            {generatingReport ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '60px 0' }}>
+                                    <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid #7c3aed', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
+                                    <p style={{ fontWeight: 700, color: '#7c3aed' }}>El CEO de Retail está analizando tus números...</p>
+                                </div>
+                            ) : (
+                                <div className="prose">
+                                    <ReactMarkdown>{report || ""}</ReactMarkdown>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ padding: '20px 32px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', background: 'var(--bg-secondary)' }}>
+                            <button
+                                onClick={() => setShowReport(false)}
+                                style={{ padding: '12px 32px', borderRadius: '16px', background: 'var(--text-primary)', color: 'white', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 @keyframes fadeIn {
