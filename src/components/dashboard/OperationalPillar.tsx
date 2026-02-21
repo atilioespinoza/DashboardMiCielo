@@ -433,6 +433,58 @@ export default function OperationalPillar() {
                         </div>
                     )}
 
+                    {/* Canal vs Tipo de Producto Analysis */}
+                    {brandsData?.channels && (
+                        <Card title="Canal de Venta vs Mix de Productos" icon={<TrendingUp size={18} />} style={{ borderTop: '4px solid var(--success)' }}>
+                            <div style={{ padding: '20px 0' }}>
+                                <div style={{ height: '300px', width: '100%' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={[
+                                                {
+                                                    name: 'Online (Web)',
+                                                    Propio: brandsData.channels.online.miCielo,
+                                                    Reventa: brandsData.channels.online.resold
+                                                },
+                                                {
+                                                    name: 'Tienda (POS)',
+                                                    Propio: brandsData.channels.pos.miCielo,
+                                                    Reventa: brandsData.channels.pos.resold
+                                                }
+                                            ]}
+                                            layout="vertical"
+                                            margin={{ left: 20, right: 30, top: 10, bottom: 10 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--border-color)" />
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={100} style={{ fontSize: '0.8rem', fontWeight: 700 }} />
+                                            <Tooltip
+                                                formatter={(value: any) => formatCurrency(value)}
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                                            />
+                                            <Bar dataKey="Propio" stackId="a" fill="#ec4899" radius={[0, 0, 0, 0]} barSize={40} />
+                                            <Bar dataKey="Reventa" stackId="a" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={40} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
+                                    <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px' }}>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Dominio Online</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '4px' }}>
+                                            {((brandsData.channels.online.miCielo / (brandsData.channels.online.total || 1)) * 100).toFixed(1)}% <span style={{ fontSize: '0.8rem', color: '#ec4899', fontWeight: 600 }}>Propio</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px' }}>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Dominio Tienda</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '4px' }}>
+                                            {((brandsData.channels.pos.miCielo / (brandsData.channels.pos.total || 1)) * 100).toFixed(1)}% <span style={{ fontSize: '0.8rem', color: '#ec4899', fontWeight: 600 }}>Propio</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                         <Card title="Pareto Ventas: Productos que generan el 80%">
                             <table style={{ width: '100%', textAlign: 'left', fontSize: '0.85rem', marginTop: '16px' }}>

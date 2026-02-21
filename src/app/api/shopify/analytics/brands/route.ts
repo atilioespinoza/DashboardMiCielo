@@ -28,6 +28,7 @@ export async function GET(request: Request) {
               edges {
                 node {
                   cancelledAt
+                  sourceName
                   lineItems(first: 50) {
                     edges {
                       node {
@@ -72,8 +73,19 @@ export async function GET(request: Request) {
     const productsMiCielo: Record<string, number> = {};
     const productsResold: Record<string, number> = {};
 
+    // Channel stats
+    const channelStats = {
+      online: { miCielo: 0, resold: 0, total: 0 },
+      pos: { miCielo: 0, resold: 0, total: 0 }
+    };
+
     allOrders.forEach(({ node }: any) => {
       if (node.cancelledAt) return;
+
+      const source = (node.sourceName || '').toLowerCase();
+      const isPos = source.includes('pos');
+      const channel = isPos ? 'pos' : 'online';
+
       node.lineItems.edges.forEach(({ node: item }: any) => {
         const vendor = item.variant?.product?.vendor || "Desconocido";
         let isMiCielo = vendor.toUpperCase() === "MI CIELO" || vendor.toUpperCase() === "MICIELO";
@@ -82,7 +94,6 @@ export async function GET(request: Request) {
         const variantTitle = item.variant?.title && item.variant?.title !== 'Default Title' ? ` (${item.variant?.title})` : '';
         let fullName = `${productTitle}${variantTitle}`;
 
-        // Aggregation Logic typical of the project
         const upperName = fullName.toUpperCase();
         if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
         else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
@@ -92,7 +103,6 @@ export async function GET(request: Request) {
         else if (upperName.includes("UPA MAMI")) fullName = "Upa Mami (Total)";
         else if (upperName.includes("COLUMPIO ERGONÓMICO") || upperName.includes("COLUMPIO ERGONOMICO")) fullName = "Columpio Ergonómico (Total)";
 
-        // Force MiCielo for core manufactured products regardless of vendor tag
         if (fullName === "Mochila Primera Etapa (Total)" ||
           fullName === "Upa Go! (Total)" ||
           fullName === "Mochila Toddler (Total)" ||
@@ -109,10 +119,13 @@ export async function GET(request: Request) {
         if (isMiCielo) {
           salesMiCielo += lineSales;
           productsMiCielo[fullName] = (productsMiCielo[fullName] || 0) + lineSales;
+          channelStats[channel].miCielo += lineSales;
         } else {
           salesResold += lineSales;
           productsResold[fullName] = (productsResold[fullName] || 0) + lineSales;
+          channelStats[channel].resold += lineSales;
         }
+        channelStats[channel].total += lineSales;
       });
     });
 
@@ -141,6 +154,10 @@ export async function GET(request: Request) {
           percentage: totalSales > 0 ? (salesResold / totalSales) * 100 : 0,
           top: topResold
         }
+      },
+      channels: {
+        online: channelStats.online,
+        pos: channelStats.pos
       }
     };
 
