@@ -74,11 +74,11 @@ export default function SalesProjections() {
 
     if (loading) {
         return (
-            <div className="animate-pulse flex flex-col gap-6">
-                <div className="h-40 bg-[var(--bg-tertiary)] rounded-3xl"></div>
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="h-80 bg-[var(--bg-tertiary)] rounded-3xl"></div>
-                    <div className="h-80 bg-[var(--bg-tertiary)] rounded-3xl"></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', opacity: 0.6 }}>
+                <div style={{ height: '160px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '24px', animation: 'pulse 1.5s infinite' }}></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                    <div style={{ height: '320px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '24px', animation: 'pulse 1.5s infinite' }}></div>
+                    <div style={{ height: '320px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '24px', animation: 'pulse 1.5s infinite' }}></div>
                 </div>
             </div>
         );
@@ -87,62 +87,79 @@ export default function SalesProjections() {
     if (!data) return null;
 
     return (
-        <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header / Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 p-8 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[32px] text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <TrendingUp size={120} />
-                    </div>
-                    <div className="relative">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Predictivo</span>
-                            <span className="text-white/80 text-sm font-medium">Fase 1: Regresión Lineal</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', animation: 'fadeIn 0.5s ease-out' }}>
+
+            {/* Header / Summary Banner */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+                <div style={{
+                    padding: '40px',
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    borderRadius: '28px',
+                    color: 'white',
+                    boxShadow: '0 20px 40px -15px rgba(79, 70, 229, 0.4)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <TrendingUp size={140} style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1 }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                            <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.2)', borderRadius: '30px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.5px' }}>
+                                PREDICTIVO
+                            </div>
+                            <span style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: 500 }}>Fase 1: Regresión Lineal</span>
                         </div>
-                        <h2 className="text-3xl font-black mb-2 tracking-tight">Proyección Mensual</h2>
-                        <p className="text-indigo-100 text-lg max-w-md leading-relaxed">
+                        <h2 style={{ fontSize: '2.2rem', fontWeight: 900, margin: '0 0 8px 0', letterSpacing: '-1px' }}>Proyección Mensual</h2>
+                        <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9, fontWeight: 400, maxWidth: '500px', lineHeight: '1.4' }}>
                             Basado en los últimos 6 meses de ventas, estimamos un cierre para este período de:
                         </p>
-                        <div className="mt-6 flex items-baseline gap-4">
-                            <span className="text-5xl font-black tracking-tighter">
+                        <div style={{ marginTop: '24px', display: 'flex', alignItems: 'baseline', gap: '16px' }}>
+                            <span style={{ fontSize: '3.2rem', fontWeight: 900, letterSpacing: '-2px' }}>
                                 {formatCurrency(data.overall.currentMonthEstimate)}
                             </span>
-                            <div className="flex items-center gap-1 text-emerald-300 font-bold bg-emerald-400/20 px-3 py-1 rounded-xl">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '6px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 800 }}>
                                 <Activity size={16} />
-                                <span>IA Ready</span>
+                                <span>IA READY</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-8 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-[32px] shadow-sm flex flex-col justify-between">
+                <div style={{
+                    padding: '32px',
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '28px',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: '24px'
+                }}>
                     <div>
-                        <div className="flex items-center gap-2 text-[var(--text-tertiary)] mb-2 font-bold text-xs uppercase tracking-widest">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', marginBottom: '8px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
                             <Target size={16} /> Margen Proyectado
                         </div>
-                        <div className="text-3xl font-black text-[var(--text-primary)]">
+                        <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
                             {formatCurrency(data.overall.currentMarginEstimate)}
                         </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-[var(--text-tertiary)]">Confianza estadística:</span>
-                            <span className="font-bold text-indigo-500">Media</span>
-                        </div>
+                    <div style={{ paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Confianza estadística:</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', padding: '4px 10px', borderRadius: '8px' }}>Media</span>
                     </div>
                 </div>
             </div>
 
-            {/* Main Projections Chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Main Charts Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
                 <Card title="Tendencia Histórica y Proyección">
-                    <div className="h-[300px] w-100 mt-6">
+                    <div style={{ height: '300px', width: '100%', marginTop: '24px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data.overall.history}>
                                 <defs>
                                     <linearGradient id="projGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid vertical={false} stroke="var(--border-color)" strokeDasharray="3 3" opacity={0.5} />
@@ -150,53 +167,53 @@ export default function SalesProjections() {
                                     dataKey="month"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 12, fill: 'var(--text-tertiary)', fontWeight: 600 }}
+                                    tick={{ fontSize: 11, fill: 'var(--text-tertiary)', fontWeight: 700 }}
                                 />
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                                    tick={{ fontSize: 10, fill: 'var(--text-tertiary)', fontWeight: 600 }}
                                     tickFormatter={(v) => `$${v / 1000000}M`}
                                 />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '16px' }}
-                                    formatter={(v: number | undefined) => [formatCurrency(v || 0), 'Facturación']}
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '12px' }}
+                                    formatter={(v: number | undefined) => [formatCurrency(v || 0), 'Ventas']}
                                 />
-                                <Area type="monotone" dataKey="val" stroke="#6366f1" strokeWidth={4} fill="url(#projGradient)" />
+                                <Area type="monotone" dataKey="val" stroke="#4f46e5" strokeWidth={4} fill="url(#projGradient)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </Card>
 
                 <Card title="Análisis Pareto 80/20" icon={<BarChart3 size={18} />}>
-                    <div className="mt-4 space-y-4">
-                        <div className="flex gap-4 items-center p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                            <div className="p-3 bg-indigo-600 text-white rounded-xl">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '20px', backgroundColor: 'rgba(79, 70, 229, 0.05)', borderRadius: '20px', border: '1px solid rgba(79, 70, 229, 0.1)' }}>
+                            <div style={{ padding: '12px', backgroundColor: '#4f46e5', color: 'white', borderRadius: '14px' }}>
                                 <Package size={24} />
                             </div>
                             <div>
-                                <div className="text-xl font-black text-indigo-950">
+                                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)' }}>
                                     {data.paretoAnalysis.topProductsCount} de {data.paretoAnalysis.totalProductsCount}
                                 </div>
-                                <div className="text-sm text-indigo-700 font-medium">Productos generan el 80% del valor</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Productos generan el 80% del valor comercial</div>
                             </div>
                         </div>
 
-                        <div className="space-y-3">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {data.paretoAnalysis.products.slice(0, 5).map((p, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-bold truncate max-w-[200px]">{p.name}</span>
-                                        <div className="flex items-center gap-2">
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '14px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid transparent', transition: 'all 0.2s' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxWidth: '65%' }}>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             {p.trend > 0 ?
-                                                <span className="flex items-center text-[10px] font-black text-emerald-500"><ArrowUpRight size={12} /> CRECIENTE</span> :
-                                                <span className="flex items-center text-[10px] font-black text-rose-500"><ArrowDownRight size={12} /> BAJANDO</span>
+                                                <span style={{ display: 'flex', alignItems: 'center', fontSize: '9px', fontWeight: 900, color: 'var(--success)', letterSpacing: '0.5px' }}><ArrowUpRight size={12} /> CRECIENTE</span> :
+                                                <span style={{ display: 'flex', alignItems: 'center', fontSize: '9px', fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.5px' }}><ArrowDownRight size={12} /> BAJANDO</span>
                                             }
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-black text-indigo-600">{formatCurrency(p.projectedSales)}</div>
-                                        <div className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold">Proyección Mes</div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 900, color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
+                                        <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 800 }}>Proyección Mes</div>
                                     </div>
                                 </div>
                             ))}
@@ -205,28 +222,32 @@ export default function SalesProjections() {
                 </Card>
             </div>
 
-            {/* Detailed Products Table/List */}
+            {/* Detailed Products Table */}
             <Card title="Comportamiento Estadístico por Producto (Top 20%)">
-                <div className="overflow-x-auto mt-4">
-                    <table className="w-full text-left border-collapse">
+                <div style={{ marginTop: '20px', overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr className="border-b border-[var(--border-color)]">
-                                <th className="pb-4 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Producto</th>
-                                <th className="pb-4 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Pronóstico Vta</th>
-                                <th className="pb-4 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Margen Est.</th>
-                                <th className="pb-4 text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider text-right">Trend Histórico</th>
+                            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Producto</th>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Pronóstico Vta</th>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Margen Est.</th>
+                                <th style={{ paddingBottom: '16px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Trend Histórico</th>
                             </tr>
                         </thead>
                         <tbody>
                             {data.paretoAnalysis.products.map((p, i) => (
-                                <tr key={i} className="border-b border-[var(--border-color)] group hover:bg-[var(--bg-tertiary)]/50 transition-colors">
-                                    <td className="py-4">
-                                        <div className="font-bold text-sm text-[var(--text-primary)]">{p.name}</div>
+                                <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }} className="table-row-hover">
+                                    <td style={{ padding: '20px 0' }}>
+                                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{p.name}</div>
                                     </td>
-                                    <td className="py-4 font-black text-sm">{formatCurrency(p.projectedSales)}</td>
-                                    <td className="py-4 text-sm text-emerald-600 font-bold">{formatCurrency(p.projectedMargin)}</td>
-                                    <td className="py-4 text-right">
-                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black uppercase">
+                                    <td style={{ padding: '20px 0' }}>
+                                        <div style={{ fontWeight: 900, fontSize: '0.9rem', color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 0' }}>
+                                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--success)' }}>{formatCurrency(p.projectedMargin)}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 0', textAlign: 'right' }}>
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '30px', backgroundColor: 'var(--bg-tertiary)', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}>
                                             {p.trend > 0 ? '+' : ''}{Math.round(p.trend / 1000)}k / mes
                                         </div>
                                     </td>
@@ -236,6 +257,22 @@ export default function SalesProjections() {
                     </table>
                 </div>
             </Card>
+
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(15px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes pulse {
+                    0% { opacity: 0.6; }
+                    50% { opacity: 0.3; }
+                    100% { opacity: 0.6; }
+                }
+                .table-row-hover:hover {
+                    background-color: var(--bg-tertiary);
+                    cursor: default;
+                }
+            `}</style>
         </div>
     );
 }
