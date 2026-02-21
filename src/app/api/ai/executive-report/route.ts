@@ -11,7 +11,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: "Datos del dashboard requeridos" }, { status: 400 });
         }
 
-        const report = await generateSpecializedReport(type as any, dashboardData);
+        // Si es reporte ejecutivo (CEO), buscar los últimos reportes de los otros pilares para consolidar
+        let pillarReports = {};
+        if (type === 'executive') {
+            try {
+                const results = await sql`
+                    SELECT DISTINCT ON (report_type) report_type, content
+                    FROM ai_reports
+                    WHERE report_type IN ('commercial', 'operational', 'marketing')
+                    ORDER BY report_type, created_at DESC
+                `;
+
+                // Formatear como objeto para pasar a la IA
+                pillarReports = results.reduce((acc: any, row: any) => {
+                    acc[row.report_type] = row.content;
+                    return acc;
+                }, {});
+            } catch (dbError) {
+                console.error("Failed to fetch pillar reports for CEO context:", dbError);
+                // No detenemos el proceso si falla esto, solo generamos con datos crudos
+            }
+        }
+
+        const report = await generateSpecializedReport(type as any, dashboardData, pillarReports);
 
         // Save to cloud (Neon)
         try {

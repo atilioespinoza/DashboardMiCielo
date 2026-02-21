@@ -24,17 +24,43 @@ const PERSONAS = {
     }
 };
 
-export async function generateSpecializedReport(type: ReportType, data: any) {
+export async function generateSpecializedReport(
+    type: ReportType,
+    data: any,
+    pillarReports?: { commercial?: string, operational?: string, marketing?: string }
+) {
     const persona = PERSONAS[type];
+
+    let contextString = "";
+    if (type === 'executive' && pillarReports && Object.keys(pillarReports).length > 0) {
+        contextString = `
+    ESTOS SON LOS ÚLTIMOS REPORTES DE TUS DIRECTORES DE ÁREA:
+    
+    1. REPORTE CFO (FINANZAS):
+    ${pillarReports.commercial || "No disponible"}
+    
+    2. REPORTE COO (OPERACIONES):
+    ${pillarReports.operational || "No disponible"}
+    
+    3. REPORTE CMO (MARKETING):
+    ${pillarReports.marketing || "No disponible"}
+    
+    Tu tarea es sintetizar estos reportes junto con los datos crudos del dashboard para dar una visión de helicóptero única.
+    `;
+    }
 
     const prompt = `
     Actúa como un ${persona.role} con más de 20 años de experiencia transformando e-commerce y tiendas de retail.
     Analiza los siguientes datos específicos del área de ${type === 'commercial' ? 'Estado de Resultados y Finanzas' : type === 'operational' ? 'Operaciones e Inventario' : type === 'marketing' ? 'Marketing y Tráfico' : 'Gestión Ejecutiva'} para el negocio "Mi Cielo".
 
-    DATOS PARA ANÁLISIS:
+    ${contextString}
+
+    DATOS CRUDOS DEL DASHBOARD PARA ANÁLISIS:
     ${JSON.stringify(data, null, 2)}
 
     TU MISIÓN ES GENERAR UN INFORME DE NIVEL EXPERTO CON FOCO EN ${persona.focus.toUpperCase()}.
+    
+    SI ERES EL CEO: Sintetiza los reportes de tus directores. No repitas lo que ellos dijeron, sino que conecta los puntos (ej. cómo el marketing está afectando el flujo de caja o cómo los quiebres de stock están limitando el LTV).
 
     EL INFORME DEBE INCLUIR:
     1. **Diagnóstico del Área**: Resumen técnico de la situación actual.
