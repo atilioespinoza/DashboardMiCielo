@@ -76,3 +76,12 @@ INSERT INTO business_goals (category, key, value, description) VALUES
 ('marketing', 'target_retention_rate', 0.25, 'Objetivo de tasa de recurrencia Q3'),
 ('logistics', 'max_delivery_cost_percent', 0.15, 'Costo máximo aceptable de logística sobre venta')
 ON CONFLICT (key) DO NOTHING;
+
+-- 6. Table for AI Reports History
+CREATE TABLE IF NOT EXISTS ai_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_type TEXT NOT NULL, -- 'executive', 'commercial', 'operational', 'marketing'
+    content TEXT NOT NULL,
+    data_snapshot JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

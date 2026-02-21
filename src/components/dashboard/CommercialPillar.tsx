@@ -2,8 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '../ui/Card';
-import { ShoppingBag, ChevronDown, ChevronRight, Plus, X, Edit2, Check, RefreshCw, Calendar, HelpCircle, ArrowUpRight, ArrowDownRight, TrendingUp, Trash2, Landmark } from 'lucide-react';
+import { ShoppingBag, ChevronDown, ChevronRight, Plus, X, Edit2, Check, RefreshCw, Calendar, HelpCircle, ArrowUpRight, ArrowDownRight, TrendingUp, Trash2, Landmark, History } from 'lucide-react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { BrainCircuit, X as CloseIcon } from 'lucide-react';
+import { ReportModal } from '../ui/ReportModal';
 
 type Periodicity = 'monthly' | 'quarterly' | 'yearly';
 
@@ -44,6 +47,11 @@ export default function CommercialPillar() {
     const [salesData, setSalesData] = useState<Record<string, any>>({});
     const [channelData, setChannelData] = useState<{ ecommerce: number; pos: number }>({ ecommerce: 0, pos: 0 });
     const [topProduct, setTopProduct] = useState({ title: 'Cargando...', rev: 0 });
+
+    // AI Report States
+    const [report, setReport] = useState<string | null>(null);
+    const [showReport, setShowReport] = useState(false);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     useEffect(() => {
         fetchShopifyData();
@@ -265,6 +273,33 @@ export default function CommercialPillar() {
         }).format(val);
     };
 
+    const generateAIReport = async () => {
+        setGeneratingReport(true);
+        setShowReport(true);
+        try {
+            const context = {
+                financial_summary: processedData.slice(-3), // Last 3 periods for trend
+                categories: categories.map(c => ({ label: c.label, items: c.items.map(i => i.label) })),
+                top_product: topProduct,
+                channels: channelData
+            };
+
+            const res = await fetch('/api/ai/executive-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dashboardData: context, type: 'commercial' })
+            });
+
+            const json = await res.json();
+            if (json.success) setReport(json.report);
+            else setReport("Error: " + json.error);
+        } catch (e) {
+            setReport("Error técnico al conectar con el CFO Digital.");
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
     // Management Methods
     const addCategory = async () => {
         if (!newCategoryName.trim()) return;
@@ -388,6 +423,41 @@ export default function CommercialPillar() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button
+                        onClick={() => setShowReport(true)}
+                        title="Ver historial de reportes"
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '30px',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <History size={16} />
+                    </button>
+                    <button
+                        onClick={generateAIReport}
+                        style={{
+                            padding: '10px 24px',
+                            borderRadius: '30px',
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                        }}
+                    >
+                        <BrainCircuit size={16} /> AUDITORÍA CFO (IA)
+                    </button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-secondary)', padding: '6px 14px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                         <Calendar size={18} style={{ color: 'var(--text-secondary)' }} />
                         <select
@@ -725,6 +795,17 @@ export default function CommercialPillar() {
                     </ResponsiveContainer>
                 </div>
             </div>
+
+            {/* AI Report Modal */}
+            <ReportModal
+                isOpen={showReport}
+                onClose={() => setShowReport(false)}
+                report={report}
+                isGenerating={generatingReport}
+                type="commercial"
+                title="Informe Estratégico CFO"
+                subtitle="Inteligencia Financiera y Rentabilidad"
+            />
         </div>
     );
 }

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
-import { Users, Repeat, TrendingUp, Target, Megaphone, Smartphone, RefreshCw, Layers, Globe, BarChart3 } from 'lucide-react';
+import { Users, Repeat, TrendingUp, Target, Megaphone, Smartphone, RefreshCw, Layers, Globe, BarChart3, History } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { BrainCircuit, X as CloseIcon } from 'lucide-react';
+import { ReportModal } from '../ui/ReportModal';
 
 export default function MarketingPillar() {
     const [retentionData, setRetentionData] = useState<any[]>([]);
@@ -9,6 +12,11 @@ export default function MarketingPillar() {
     const [summary, setSummary] = useState({ nuevos: 0, recurrentes: 0, total: 0, webOrdersCount: 0 });
     const [loading, setLoading] = useState(true);
     const [strategicNotes, setStrategicNotes] = useState<any[]>([]);
+
+    // AI Report States
+    const [report, setReport] = useState<string | null>(null);
+    const [showReport, setShowReport] = useState(false);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     useEffect(() => {
         fetchMarketingData();
@@ -76,9 +84,37 @@ export default function MarketingPillar() {
         }
     };
 
-    const retentionRate = summary.total > 0 ? ((summary.recurrentes / summary.total) * 100).toFixed(1) : '0.0';
-    // Logic calibration: Conversion must be Web Orders / Web Sessions
+    const totalClients = summary.total;
+    const retentionRate = totalClients > 0 ? ((summary.recurrentes / totalClients) * 100).toFixed(1) : '0.0';
     const convRate = trafficData.totalSessions > 0 ? ((summary.webOrdersCount / trafficData.totalSessions) * 100).toFixed(2) : '0.00';
+
+    const generateAIReport = async () => {
+        setGeneratingReport(true);
+        setShowReport(true);
+        try {
+            const context = {
+                traffic: trafficData,
+                performance: summary,
+                retention: retentionRate,
+                conversion: convRate,
+                notes: strategicNotes
+            };
+
+            const res = await fetch('/api/ai/executive-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dashboardData: context, type: 'marketing' })
+            });
+
+            const json = await res.json();
+            if (json.success) setReport(json.report);
+            else setReport("Error: " + json.error);
+        } catch (e) {
+            setReport("Error técnico al conectar con el CMO Digital.");
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
 
     const colors = ['#8b5cf6', '#d946ef', '#f43f5e', '#fb923c', '#eab308'];
 
@@ -103,6 +139,41 @@ export default function MarketingPillar() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button
+                        onClick={() => setShowReport(true)}
+                        title="Ver historial de reportes"
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '30px',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <History size={16} />
+                    </button>
+                    <button
+                        onClick={generateAIReport}
+                        style={{
+                            padding: '10px 24px',
+                            borderRadius: '30px',
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                        }}
+                    >
+                        <BrainCircuit size={16} /> AUDITORÍA CMO (IA)
+                    </button>
                     <button onClick={() => { fetchMarketingData(); fetchTrafficData(); }} className="compact-btn" style={{ background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                         Sincronizar Datos Digitales
@@ -296,6 +367,17 @@ export default function MarketingPillar() {
                     </div>
                 </div>
             </Card>
+
+            {/* AI Report Modal */}
+            <ReportModal
+                isOpen={showReport}
+                onClose={() => setShowReport(false)}
+                report={report}
+                isGenerating={generatingReport}
+                type="marketing"
+                title="Informe Estratégico CMO"
+                subtitle="Análisis de Growth e Inteligencia de Tráfico"
+            />
         </div>
     );
 }

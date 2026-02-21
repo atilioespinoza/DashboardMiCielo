@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
-import { Package, AlertTriangle, Truck, Clock, CheckCircle2, ArrowRight, RefreshCw, Box, HelpCircle, TrendingUp } from 'lucide-react';
+import { Package, AlertTriangle, Truck, Clock, CheckCircle2, ArrowRight, RefreshCw, Box, HelpCircle, TrendingUp, History } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { BrainCircuit, X as CloseIcon } from 'lucide-react';
+import { ReportModal } from '../ui/ReportModal';
 
 interface OpData {
     inventory: {
@@ -38,6 +41,11 @@ export default function OperationalPillar() {
     const [selectedPeriod, setSelectedPeriod] = useState(PARETO_PERIODS[0]);
     const [customStartDate, setCustomStartDate] = useState('2025-01-01');
     const [customEndDate, setCustomEndDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // AI Report States
+    const [report, setReport] = useState<string | null>(null);
+    const [showReport, setShowReport] = useState(false);
+    const [generatingReport, setGeneratingReport] = useState(false);
 
     useEffect(() => {
         fetchAllData();
@@ -76,6 +84,32 @@ export default function OperationalPillar() {
         return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
     };
 
+    const generateAIReport = async () => {
+        setGeneratingReport(true);
+        setShowReport(true);
+        try {
+            const context = {
+                operations: data,
+                pareto: paretoData?.summary,
+                health: inventoryHealth?.summary
+            };
+
+            const res = await fetch('/api/ai/executive-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dashboardData: context, type: 'operational' })
+            });
+
+            const json = await res.json();
+            if (json.success) setReport(json.report);
+            else setReport("Error: " + json.error);
+        } catch (e) {
+            setReport("Error técnico al conectar con el COO Digital.");
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
     if (loading) {
         return (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
@@ -105,30 +139,66 @@ export default function OperationalPillar() {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '14px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                    {[
-                        { id: 'inventory', label: 'Resumen Logístico' },
-                        { id: 'pareto', label: 'Análisis Pareto (80/20)' },
-                        { id: 'rotation', label: 'Rotación y Salud' }
-                    ].map((v) => (
-                        <button
-                            key={v.id}
-                            onClick={() => setView(v.id as any)}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '10px',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                color: view === v.id ? 'white' : 'var(--text-secondary)',
-                                backgroundColor: view === v.id ? 'var(--brand-primary)' : 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            {v.label}
-                        </button>
-                    ))}
+                <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '14px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', gap: '8px' }}>
+                    <button
+                        onClick={() => setShowReport(true)}
+                        title="Ver historial de reportes"
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '10px',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <History size={16} />
+                    </button>
+                    <button
+                        onClick={generateAIReport}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                            color: 'white',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        <BrainCircuit size={14} /> AUDITORÍA COO (IA)
+                    </button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        {[
+                            { id: 'inventory', label: 'Resumen Logístico' },
+                            { id: 'pareto', label: 'Análisis Pareto (80/20)' },
+                            { id: 'rotation', label: 'Rotación y Salud' }
+                        ].map((v) => (
+                            <button
+                                key={v.id}
+                                onClick={() => setView(v.id as any)}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '10px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    color: view === v.id ? 'white' : 'var(--text-secondary)',
+                                    backgroundColor: view === v.id ? 'var(--brand-primary)' : 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                {v.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -389,6 +459,17 @@ export default function OperationalPillar() {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
+
+            {/* AI Report Modal */}
+            <ReportModal
+                isOpen={showReport}
+                onClose={() => setShowReport(false)}
+                report={report}
+                isGenerating={generatingReport}
+                type="operational"
+                title="Informe Estratégico COO"
+                subtitle="Gestión de Inventario y Operaciones"
+            />
         </div>
     );
 }

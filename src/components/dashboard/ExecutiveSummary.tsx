@@ -14,7 +14,8 @@ import {
     PieChart, Pie
 } from 'recharts';
 import ReactMarkdown from 'react-markdown';
-import { BrainCircuit, X } from 'lucide-react';
+import { BrainCircuit, X, History } from 'lucide-react';
+import { ReportModal } from '../ui/ReportModal';
 
 export default function ExecutiveSummary() {
     const [data, setData] = useState<any>(null);
@@ -447,6 +448,23 @@ export default function ExecutiveSummary() {
                 </div>
                 <div style={{ display: 'flex', gap: '16px' }}>
                     <button
+                        onClick={() => setShowReport(true)}
+                        title="Ver historial de reportes"
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '30px',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <History size={16} />
+                    </button>
+                    <button
                         onClick={generateAIReport}
                         style={{
                             padding: '10px 24px',
@@ -467,76 +485,22 @@ export default function ExecutiveSummary() {
                     <div style={{ padding: '10px 24px', borderRadius: '30px', background: 'var(--bg-tertiary)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
                         SYNC: OK
                     </div>
-                    <button onClick={() => fetchData()} style={{ padding: '10px 24px', borderRadius: '30px', background: '#4f46e5', color: 'white', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> ACTUALIZAR
-                    </button>
                 </div>
+                <button onClick={() => fetchData()} style={{ padding: '10px 24px', borderRadius: '30px', background: '#4f46e5', color: 'white', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> ACTUALIZAR
+                </button>
             </div>
 
             {/* AI Report Modal */}
-            {showReport && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
-                    zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '24px', animation: 'fadeIn 0.3s ease-out'
-                }}>
-                    <div style={{
-                        width: '100%', maxWidth: '900px', maxHeight: '85vh',
-                        backgroundColor: 'white', borderRadius: '32px',
-                        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                        boxShadow: '0 30px 60px -12px rgba(0,0,0,0.25)',
-                        border: '1px solid var(--border-color)'
-                    }}>
-                        <div style={{
-                            padding: '24px 32px', borderBottom: '1px solid var(--border-color)',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            background: 'linear-gradient(to right, #fafafa, #ffffff)'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: '#7c3aed' }}>
-                                    <BrainCircuit size={24} />
-                                </div>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900 }}>Informe Estratégico CEO</h3>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Generado por Inteligencia Artificial</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowReport(false)}
-                                style={{ padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '50%', color: 'var(--text-tertiary)', cursor: 'pointer', border: 'none' }}
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div style={{
-                            padding: '40px', overflowY: 'auto', flex: 1,
-                            lineHeight: '1.8', color: 'var(--text-secondary)'
-                        }}>
-                            {generatingReport ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '60px 0' }}>
-                                    <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid #7c3aed', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
-                                    <p style={{ fontWeight: 700, color: '#7c3aed' }}>El CEO de Retail está analizando tus números...</p>
-                                </div>
-                            ) : (
-                                <div className="prose">
-                                    <ReactMarkdown>{report || ""}</ReactMarkdown>
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ padding: '20px 32px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', background: 'var(--bg-secondary)' }}>
-                            <button
-                                onClick={() => setShowReport(false)}
-                                style={{ padding: '12px 32px', borderRadius: '16px', background: 'var(--text-primary)', color: 'white', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}
-                            >
-                                Entendido
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ReportModal
+                isOpen={showReport}
+                onClose={() => setShowReport(false)}
+                report={report}
+                isGenerating={generatingReport}
+                type="executive"
+                title="Informe Estratégico CEO"
+                subtitle="Visión Global y Salud del Negocio"
+            />
 
             <style jsx>{`
                 @keyframes fadeIn {
@@ -551,6 +515,6 @@ export default function ExecutiveSummary() {
                     to { transform: rotate(360deg); }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
