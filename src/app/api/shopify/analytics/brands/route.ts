@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
   }
 
-  const cacheKey = `brands_mix_v6_${startDate}_${endDate || 'now'}`;
+  const cacheKey = `brands_mix_v7_${startDate}_${endDate || 'now'}`;
   const cachedData = await getCache(cacheKey);
   if (cachedData) {
     return NextResponse.json({ success: true, data: cachedData, cached: true });
