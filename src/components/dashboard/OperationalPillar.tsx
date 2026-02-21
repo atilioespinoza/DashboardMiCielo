@@ -58,12 +58,13 @@ export default function OperationalPillar() {
             const start = selectedPeriod.id === 'custom' ? customStartDate : selectedPeriod.start;
             const end = selectedPeriod.id === 'custom' ? customEndDate : selectedPeriod.end;
             const paretoUrl = `/api/shopify/analytics/pareto?startDate=${start}${end ? `&endDate=${end}` : ''}`;
+            const brandsUrl = `/api/shopify/analytics/brands?startDate=${start}${end ? `&endDate=${end}` : ''}`;
 
             const [opRes, paretoRes, healthRes, brandsRes] = await Promise.all([
                 fetch('/api/shopify/operations'),
                 fetch(paretoUrl),
                 fetch('/api/shopify/analytics/inventory-health'),
-                fetch('/api/shopify/analytics/brands?months=12')
+                fetch(brandsUrl)
             ]);
 
             const [opJson, paretoJson, healthJson, brandsJson] = await Promise.all([
@@ -266,6 +267,87 @@ export default function OperationalPillar() {
                         />
                     </div>
 
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
+                        <Card title="Alertas de Reposición (Próximos a Quiebre)">
+                            <div style={{ height: '350px', width: '100%', marginTop: '20px' }}>
+                                {inventoryChartData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={inventoryChartData} layout="vertical" margin={{ left: 40, right: 30 }}>
+                                            <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border-color)" />
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} style={{ fontSize: '11px', fill: 'var(--text-secondary)' }} width={140} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                                                formatter={(val) => [`${val} unidades`, 'Stock Disponible']}
+                                            />
+                                            <Bar dataKey="stock" radius={[0, 4, 4, 0]} barSize={20}>
+                                                {inventoryChartData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.stock <= 2 ? 'var(--danger)' : 'var(--warning)'} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--success)' }}>
+                                        <CheckCircle2 size={48} style={{ marginBottom: '12px' }} />
+                                        <p style={{ fontWeight: 600 }}>¡Todo en orden!</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+
+                        <Card title="Últimos Pedidos por Despachar">
+                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {data?.fulfillment.recentPending && data.fulfillment.recentPending.length > 0 ? (
+                                    data.fulfillment.recentPending.map((order: any) => (
+                                        <div key={order.id} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{order.name}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{new Date(order.date).toLocaleDateString('es-CL')}</div>
+                                            </div>
+                                            <ArrowRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--success)' }}>
+                                        <Truck size={40} style={{ opacity: 0.5, marginBottom: '12px' }} />
+                                        <p>No hay despachos pendientes.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                </>
+            ) : view === 'pareto' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                        <Clock size={16} />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Horizonte de Análisis:</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            {PARETO_PERIODS.map(period => (
+                                <button
+                                    key={period.id}
+                                    onClick={() => setSelectedPeriod(period)}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+                                        background: selectedPeriod.id === period.id ? 'var(--brand-primary)' : 'var(--bg-primary)',
+                                        color: selectedPeriod.id === period.id ? '#fff' : 'var(--text-secondary)',
+                                    }}
+                                >
+                                    {period.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {selectedPeriod.id === 'custom' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '-8px' }}>
+                            <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }} />
+                            <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }} />
+                            <button onClick={fetchAllData} style={{ padding: '6px 16px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>Analizar Rango</button>
+                        </div>
+                    )}
+
                     {/* Brands Mix Analysis (Control de Mando de Ingresos) */}
                     {brandsData && (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
@@ -345,87 +427,6 @@ export default function OperationalPillar() {
                                     </div>
                                 </div>
                             </Card>
-                        </div>
-                    )}
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
-                        <Card title="Alertas de Reposición (Próximos a Quiebre)">
-                            <div style={{ height: '350px', width: '100%', marginTop: '20px' }}>
-                                {inventoryChartData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={inventoryChartData} layout="vertical" margin={{ left: 40, right: 30 }}>
-                                            <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border-color)" />
-                                            <XAxis type="number" hide />
-                                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} style={{ fontSize: '11px', fill: 'var(--text-secondary)' }} width={140} />
-                                            <Tooltip
-                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
-                                                formatter={(val) => [`${val} unidades`, 'Stock Disponible']}
-                                            />
-                                            <Bar dataKey="stock" radius={[0, 4, 4, 0]} barSize={20}>
-                                                {inventoryChartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.stock <= 2 ? 'var(--danger)' : 'var(--warning)'} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--success)' }}>
-                                        <CheckCircle2 size={48} style={{ marginBottom: '12px' }} />
-                                        <p style={{ fontWeight: 600 }}>¡Todo en orden!</p>
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
-
-                        <Card title="Últimos Pedidos por Despachar">
-                            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {data?.fulfillment.recentPending && data.fulfillment.recentPending.length > 0 ? (
-                                    data.fulfillment.recentPending.map((order: any) => (
-                                        <div key={order.id} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div>
-                                                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{order.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{new Date(order.date).toLocaleDateString('es-CL')}</div>
-                                            </div>
-                                            <ArrowRight size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--success)' }}>
-                                        <Truck size={40} style={{ opacity: 0.5, marginBottom: '12px' }} />
-                                        <p>No hay despachos pendientes.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
-                    </div>
-                </>
-            ) : view === 'pareto' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                        <Clock size={16} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Horizonte de Análisis:</span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            {PARETO_PERIODS.map(period => (
-                                <button
-                                    key={period.id}
-                                    onClick={() => setSelectedPeriod(period)}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
-                                        background: selectedPeriod.id === period.id ? 'var(--brand-primary)' : 'var(--bg-primary)',
-                                        color: selectedPeriod.id === period.id ? '#fff' : 'var(--text-secondary)',
-                                    }}
-                                >
-                                    {period.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {selectedPeriod.id === 'custom' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '-8px' }}>
-                            <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }} />
-                            <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }} />
-                            <button onClick={fetchAllData} style={{ padding: '6px 16px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>Analizar Rango</button>
                         </div>
                     )}
 

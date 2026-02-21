@@ -3,7 +3,8 @@ import { getCache, setCache } from '@/lib/cache';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const monthsBack = parseInt(searchParams.get('months') || '12');
+  const startDate = searchParams.get('startDate') || '2024-01-01';
+  const endDate = searchParams.get('endDate');
 
   const shop = process.env.SHOPIFY_SHOP_NAME;
   const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
@@ -13,18 +14,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
   }
 
-  const cacheKey = `brands_mix_v5_${monthsBack}`;
+  const cacheKey = `brands_mix_v6_${startDate}_${endDate || 'now'}`;
   const cachedData = await getCache(cacheKey);
   if (cachedData) {
     return NextResponse.json({ success: true, data: cachedData, cached: true });
   }
 
   try {
-    const sinceDate = new Date(Date.now() - monthsBack * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
     const query = `
           query GetBrandSales($cursor: String) {
-            orders(first: 250, after: $cursor, query: "created_at:>=${sinceDate} status:any") {
+            orders(first: 250, after: $cursor, query: "created_at:>=${startDate} ${endDate ? `created_at:<=${endDate}` : ''} status:any") {
               pageInfo { hasNextPage endCursor }
               edges {
                 node {
