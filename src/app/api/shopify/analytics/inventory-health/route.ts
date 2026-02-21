@@ -72,12 +72,12 @@ export async function GET() {
     let hasNextPage = true;
     let cursor = null;
     while (hasNextPage) {
-      const res = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+      const resp: Response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
         body: JSON.stringify({ query: salesQuery, variables: { cursor } }),
       });
-      const json = await res.json();
+      const json: any = await resp.json();
       allOrders = [...allOrders, ...json.data.orders.edges];
       hasNextPage = json.data.orders.pageInfo.hasNextPage;
       cursor = json.data.orders.pageInfo.endCursor;
@@ -88,15 +88,15 @@ export async function GET() {
     hasNextPage = true;
     cursor = null;
     while (hasNextPage) {
-      const res = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+      const respInv: Response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
         body: JSON.stringify({ query: inventoryQuery, variables: { cursor } }),
       });
-      const json = await res.json();
-      allInventory = [...allInventory, ...json.data.products.edges];
-      hasNextPage = json.data.products.pageInfo.hasNextPage;
-      cursor = json.data.products.pageInfo.endCursor;
+      const jsonInv: any = await respInv.json();
+      allInventory = [...allInventory, ...jsonInv.data.products.edges];
+      hasNextPage = jsonInv.data.products.pageInfo.hasNextPage;
+      cursor = jsonInv.data.products.pageInfo.endCursor;
     }
 
     // Process Data

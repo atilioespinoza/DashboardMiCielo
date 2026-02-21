@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
         // Limit to 4 iterations (1000 orders) for performance, usually enough for Pareto
         while (hasNextPage && iterations < 4) {
-            const response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+            const resp: Response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
                 body: JSON.stringify({ query, variables: { cursor } }),
             });
 
-            const result = await response.json();
+            const result: any = await resp.json();
             if (result.errors) throw new Error(result.errors[0].message);
 
             allOrders = [...allOrders, ...result.data.orders.edges];
