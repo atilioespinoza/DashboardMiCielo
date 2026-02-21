@@ -10,7 +10,8 @@ import {
     Package,
     Activity,
     LineChart as LineIcon,
-    BarChart3
+    BarChart3,
+    PieChart as PieChartIcon
 } from 'lucide-react';
 import {
     LineChart,
@@ -51,6 +52,7 @@ interface ProjectionData {
 
 export default function SalesProjections() {
     const [data, setData] = useState<ProjectionData | null>(null);
+    const [brandsData, setBrandsData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [months, setMonths] = useState(6);
 
@@ -58,11 +60,16 @@ export default function SalesProjections() {
         const fetchProjections = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/shopify/analytics/projections?months=${months}`);
-                const json = await res.json();
-                if (json.success) {
-                    setData(json.data);
-                }
+                const [projRes, brandsRes] = await Promise.all([
+                    fetch(`/api/shopify/analytics/projections?months=${months}`),
+                    fetch(`/api/shopify/analytics/brands?months=${months}`)
+                ]);
+
+                const projJson = await projRes.json();
+                const brandsJson = await brandsRes.json();
+
+                if (projJson.success) setData(projJson.data);
+                if (brandsJson.success) setBrandsData(brandsJson.data);
             } catch (e) {
                 console.error("Error fetching projections", e);
             } finally {
@@ -226,6 +233,53 @@ export default function SalesProjections() {
                     </div>
                 </Card>
             </div>
+
+            {/* Brands Mix Analysis */}
+            {brandsData && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                    <Card title={`Fabricación Propia (Mi Cielo)`} icon={<PieChartIcon size={18} style={{ color: '#ec4899' }} />} style={{ borderTop: '4px solid #ec4899' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#ec4899' }}>{brandsData.mix.miCielo.percentage.toFixed(1)}%</div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{formatCurrency(brandsData.mix.miCielo.total)}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>ventas contribuidas</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '16px' }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '12px', textTransform: 'uppercase' }}>Top Ventas (Propio)</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {brandsData.mix.miCielo.top.map((p: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                                        <div style={{ fontWeight: 600 }}>{p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name}</div>
+                                        <div style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>{formatCurrency(p.sales)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title={`Productos en Reventa (Otras Marcas)`} icon={<Package size={18} style={{ color: 'var(--brand-primary)' }} />} style={{ borderTop: '4px solid var(--brand-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--brand-primary)' }}>{brandsData.mix.resold.percentage.toFixed(1)}%</div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{formatCurrency(brandsData.mix.resold.total)}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>ventas contribuidas</div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '16px' }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '12px', textTransform: 'uppercase' }}>Top Ventas (Reventa)</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {brandsData.mix.resold.top.map((p: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                                        <div style={{ fontWeight: 600 }}>{p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name}</div>
+                                        <div style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>{formatCurrency(p.sales)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* Top 5 Products Detailed Behavior */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-8px' }}>
