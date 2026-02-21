@@ -79,10 +79,14 @@ export async function GET(request: Request) {
       iterations++;
     }
 
-    // 3. Obtener Inventario Actual para calcular Rotación y Disponibilidad (Versión precisa)
+    // 3. Obtener Inventario Actual para calcular Rotación y Disponibilidad
     const inventoryQuery = `
-          query GetInventory {
-            products(first: 250, query: "status:active") {
+          query GetInventory($cursor: String) {
+            products(first: 250, after: $cursor, query: "status:active") {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
               edges {
                 node {
                   title
@@ -90,15 +94,7 @@ export async function GET(request: Request) {
                     edges {
                       node {
                         title
-                        inventoryItem { 
-                            inventoryLevels(first: 10) {
-                                edges {
-                                    node {
-                                        available
-                                    }
-                                }
-                            }
-                        }
+                        inventoryQuantity
                         product { title }
                       }
                     }
@@ -109,33 +105,36 @@ export async function GET(request: Request) {
           }
         `;
 
-    const inventoryResp = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
-      body: JSON.stringify({ query: inventoryQuery }),
-    });
-    const inventoryResult: any = await inventoryResp.json();
     const stockMap: Record<string, number> = {};
+    let invHasNextPage = true;
+    let invCursor = null;
 
-    inventoryResult.data?.products?.edges?.forEach(({ node: product }: any) => {
-      product.variants.edges.forEach(({ node: variant }: any) => {
-        const productTitle = variant.product?.title || product.title;
-        const variantTitle = variant.title !== 'Default Title' ? ` (${variant.title})` : '';
-        let fullName = `${productTitle}${variantTitle}`;
-
-        const upperName = fullName.toUpperCase();
-        if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
-        else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
-        else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
-
-        // Sumamos el disponible de todas las locaciones
-        const available = variant.inventoryItem.inventoryLevels.edges.reduce((acc: number, edge: any) => {
-          return acc + (edge.node.available || 0);
-        }, 0);
-
-        stockMap[fullName] = (stockMap[fullName] || 0) + available;
+    while (invHasNextPage) {
+      const inventoryResp = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
+        body: JSON.stringify({ query: inventoryQuery, variables: { cursor: invCursor } }),
       });
-    });
+      const inventoryResult: any = await inventoryResp.json();
+
+      inventoryResult.data?.products?.edges?.forEach(({ node: product }: any) => {
+        product.variants.edges.forEach(({ node: variant }: any) => {
+          const productTitle = variant.product?.title || product.title;
+          const variantTitle = variant.title !== 'Default Title' ? ` (${variant.title})` : '';
+          let fullName = `${productTitle}${variantTitle}`;
+
+          const upperName = fullName.toUpperCase();
+          if (upperName.includes("MOCHILA PRIMERA ETAPA")) fullName = "Mochila Primera Etapa (Total)";
+          else if (upperName.includes("UPA GO!")) fullName = "Upa Go! (Total)";
+          else if (upperName.includes("TODDLER") && (upperName.includes("MOCHILA") || upperName.includes("MOSHILA"))) fullName = "Mochila Toddler (Total)";
+
+          stockMap[fullName] = (stockMap[fullName] || 0) + (variant.inventoryQuantity || 0);
+        });
+      });
+
+      invHasNextPage = inventoryResult.data?.products?.pageInfo?.hasNextPage;
+      invCursor = inventoryResult.data?.products?.pageInfo?.endCursor;
+    }
 
     const dailyData: Record<string, { sales: number, margin: number }> = {};
     const productHistorical: Record<string, Record<string, { sales: number, margin: number, quantity: number }>> = {};
