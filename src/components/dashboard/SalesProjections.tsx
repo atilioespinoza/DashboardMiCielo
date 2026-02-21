@@ -249,6 +249,8 @@ export default function SalesProjections() {
                     <option value={6}>Últimos 6 Meses</option>
                     <option value={9}>Últimos 9 Meses</option>
                     <option value={12}>Últimos 12 Meses</option>
+                    <option value={18}>Últimos 18 Meses</option>
+                    <option value={24}>Últimos 24 Meses</option>
                 </select>
             </div>
 
