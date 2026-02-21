@@ -466,7 +466,29 @@ export default function OperationalPillar() {
                                 <tbody>
                                     {paretoData?.paretoMargin.map((p: any, i: number) => (
                                         <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', background: p.isPareto ? 'rgba(16, 185, 129, 0.02)' : 'transparent' }}>
-                                            <td style={{ padding: '12px 8px', fontWeight: p.isPareto ? 700 : 400 }}>{p.name}</td>
+                                            <td style={{ padding: '12px 8px', fontWeight: p.isPareto ? 700 : 400 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {p.name}
+                                                    {/* Alert: If margin equals sales (cost is 0) */}
+                                                    {Math.abs(p.sales - p.margin) < 1 && (
+                                                        <div
+                                                            title="ALERTA CRÍTICA: Costo no informado en Shopify. El margen es igual a la venta."
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
+                                                        >
+                                                            <AlertTriangle size={12} /> COSTO 0
+                                                        </div>
+                                                    )}
+                                                    {/* Alert: If margin percentage is suspiciously low (<10%) */}
+                                                    {p.margin / p.sales < 0.1 && Math.abs(p.sales - p.margin) > 1 && (
+                                                        <div
+                                                            title="ADVERTENCIA: Margen sospechosamente bajo (<10%). Revisar costos en Shopify."
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
+                                                        >
+                                                            <HelpCircle size={12} /> MARGEN BAJO
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td style={{ textAlign: 'right', padding: '12px 8px' }}>{formatCurrency(p.margin)}</td>
                                             <td style={{ textAlign: 'right', padding: '12px 8px', fontWeight: 700 }}>{p.cumPercentage.toFixed(1)}%</td>
                                         </tr>
