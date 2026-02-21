@@ -163,7 +163,7 @@ export async function GET(request: Request) {
                     projectedSales: project(history),
                     projectedMargin: project(marginHistory),
                     trend: ss.linearRegression(history.map((h, i) => [i, h.val])).m, // Pendiente
-                    history: history.slice(-3) // Últimos 3 meses
+                    history: history // Devolver historial completo para gráficos individuales
                 };
             })
         };

@@ -222,6 +222,39 @@ export default function SalesProjections() {
                 </Card>
             </div>
 
+            {/* Top 5 Products Detailed Behavior */}
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '-8px' }}>
+                Comportamiento Individual: Top 5 Productos
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+                {data.paretoAnalysis.products.slice(0, 5).map((p, i) => (
+                    <Card key={i} title={p.name} style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#4f46e5' }}>{formatCurrency(p.projectedSales)}</div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: p.trend > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                                {p.trend > 0 ? '+' : ''}{Math.round((p.trend / (p.projectedSales || 1)) * 100)}% trend
+                            </div>
+                        </div>
+                        <div style={{ height: '80px', width: '100%' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={p.history}>
+                                    <Area
+                                        type="monotone"
+                                        dataKey="val"
+                                        stroke={p.trend > 0 ? '#10b981' : '#ef4444'}
+                                        fill={p.trend > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}
+                                        strokeWidth={2}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div style={{ marginTop: '12px', fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                            Proyecc. vs Histórico
+                        </div>
+                    </Card>
+                ))}
+            </div>
+
             {/* Detailed Products Table */}
             <Card title="Comportamiento Estadístico por Producto (Top 20%)">
                 <div style={{ marginTop: '20px', overflowX: 'auto' }}>
