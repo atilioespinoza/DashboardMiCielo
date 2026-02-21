@@ -469,23 +469,34 @@ export default function OperationalPillar() {
                                             <td style={{ padding: '12px 8px', fontWeight: p.isPareto ? 700 : 400 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     {p.name}
-                                                    {/* Alert: If margin equals sales (cost is 0) */}
-                                                    {Math.abs(p.sales - p.margin) < 1 && (
+                                                    {p.name.toUpperCase().includes('GIFT CARD') ? (
                                                         <div
-                                                            title="ALERTA CRÍTICA: Costo no informado en Shopify. El margen es igual a la venta."
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
+                                                            title="Este es un producto de prepago (Gift Card). Es normal que el margen sea del 100% al momento de la venta."
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
                                                         >
-                                                            <AlertTriangle size={12} /> COSTO 0
+                                                            GIFT CARD
                                                         </div>
-                                                    )}
-                                                    {/* Alert: If margin percentage is suspiciously low (<50%) */}
-                                                    {p.margin / p.sales < 0.5 && Math.abs(p.sales - p.margin) > 1 && (
-                                                        <div
-                                                            title="ADVERTENCIA: Margen inferior al 50%. Revisar costos en Shopify."
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
-                                                        >
-                                                            <HelpCircle size={12} /> MARGEN BAJO
-                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            {/* Alert: If margin equals sales (cost is 0) */}
+                                                            {Math.abs(p.sales - p.margin) < 1 && (
+                                                                <div
+                                                                    title="ALERTA CRÍTICA: Costo no informado en Shopify. El margen es igual a la venta."
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
+                                                                >
+                                                                    <AlertTriangle size={12} /> COSTO 0
+                                                                </div>
+                                                            )}
+                                                            {/* Alert: If margin percentage is suspiciously low (<50%) */}
+                                                            {p.margin / p.sales < 0.5 && Math.abs(p.sales - p.margin) > 1 && (
+                                                                <div
+                                                                    title="ADVERTENCIA: Margen inferior al 50%. Revisar costos en Shopify."
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 900 }}
+                                                                >
+                                                                    <HelpCircle size={12} /> MARGEN BAJO
+                                                                </div>
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
