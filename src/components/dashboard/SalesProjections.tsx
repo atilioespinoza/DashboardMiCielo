@@ -297,7 +297,7 @@ export default function SalesProjections() {
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-md)', padding: '10px', fontSize: '11px' }}
                                         formatter={(value: any, name: string | undefined) => {
                                             if (name === 'Venta Neto') return [formatCurrency(value), name];
-                                            if (name === 'Unidades') return [value, name];
+                                            if (name === 'Unidades') return [`${value} un.`, name];
                                             return [value, name || ''];
                                         }}
                                         labelFormatter={(label) => `Mes: ${label}`}
@@ -317,8 +317,11 @@ export default function SalesProjections() {
                                         name="Unidades"
                                         type="monotone"
                                         dataKey="qty"
-                                        stroke="transparent"
-                                        fill="transparent"
+                                        stroke="#4f46e5"
+                                        fill="none"
+                                        strokeWidth={0}
+                                        activeDot={false}
+                                        dot={false}
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
