@@ -10,8 +10,7 @@ import {
     Package,
     Activity,
     LineChart as LineIcon,
-    BarChart3,
-    PieChart as PieChartIcon
+    BarChart3
 } from 'lucide-react';
 import {
     LineChart,
@@ -25,9 +24,7 @@ import {
     Area,
     BarChart,
     Bar,
-    Cell,
-    PieChart,
-    Pie
+    Cell
 } from 'recharts';
 
 interface ProjectionData {
@@ -54,7 +51,6 @@ interface ProjectionData {
 
 export default function SalesProjections() {
     const [data, setData] = useState<ProjectionData | null>(null);
-    const [brandsData, setBrandsData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [months, setMonths] = useState(6);
 
@@ -62,16 +58,9 @@ export default function SalesProjections() {
         const fetchProjections = async () => {
             setLoading(true);
             try {
-                const [projRes, brandsRes] = await Promise.all([
-                    fetch(`/api/shopify/analytics/projections?months=${months}`),
-                    fetch(`/api/shopify/analytics/brands?months=${months}`)
-                ]);
-
+                const projRes = await fetch(`/api/shopify/analytics/projections?months=${months}`);
                 const projJson = await projRes.json();
-                const brandsJson = await brandsRes.json();
-
                 if (projJson.success) setData(projJson.data);
-                if (brandsJson.success) setBrandsData(brandsJson.data);
             } catch (e) {
                 console.error("Error fetching projections", e);
             } finally {
@@ -235,88 +224,6 @@ export default function SalesProjections() {
                     </div>
                 </Card>
             </div>
-
-            {/* Brands Mix Analysis */}
-            {brandsData && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                    <Card title="Distribución de Ingresos" icon={<PieChartIcon size={18} style={{ color: 'var(--text-primary)' }} />} style={{ borderTop: '4px solid var(--text-primary)' }}>
-                        <div style={{ height: '220px', width: '100%', marginTop: '20px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={[
-                                            { name: 'Fabricación Propia', value: brandsData.mix.miCielo.total, fill: '#ec4899' },
-                                            { name: 'Reventa (Otras)', value: brandsData.mix.resold.total, fill: '#4f46e5' }
-                                        ]}
-                                        innerRadius={60}
-                                        outerRadius={85}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        animationDuration={1000}
-                                    >
-                                        <Cell key="cell-0" fill="#ec4899" />
-                                        <Cell key="cell-1" fill="#4f46e5" />
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
-                                        formatter={(v: number | undefined) => [formatCurrency(v || 0), 'Ingresos']}
-                                    />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
-                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ec4899' }}></div> Mi Cielo
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
-                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#4f46e5' }}></div> Otras Marcas
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card title={`Fabricación Propia (Mi Cielo)`} icon={<PieChartIcon size={18} style={{ color: '#ec4899' }} />} style={{ borderTop: '4px solid #ec4899' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#ec4899' }}>{brandsData.mix.miCielo.percentage.toFixed(1)}%</div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{formatCurrency(brandsData.mix.miCielo.total)}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>ventas contribuidas</div>
-                            </div>
-                        </div>
-                        <div style={{ marginTop: '16px' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '12px', textTransform: 'uppercase' }}>Top Ventas (Propio)</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {brandsData.mix.miCielo.top.map((p: any, i: number) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                                        <div style={{ fontWeight: 600 }}>{p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name}</div>
-                                        <div style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>{formatCurrency(p.sales)}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card title={`Productos en Reventa (Otras Marcas)`} icon={<Package size={18} style={{ color: 'var(--brand-primary)' }} />} style={{ borderTop: '4px solid var(--brand-primary)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--brand-primary)' }}>{brandsData.mix.resold.percentage.toFixed(1)}%</div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{formatCurrency(brandsData.mix.resold.total)}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>ventas contribuidas</div>
-                            </div>
-                        </div>
-                        <div style={{ marginTop: '16px' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '12px', textTransform: 'uppercase' }}>Top Ventas (Reventa)</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {brandsData.mix.resold.top.map((p: any, i: number) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                                        <div style={{ fontWeight: 600 }}>{p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name}</div>
-                                        <div style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>{formatCurrency(p.sales)}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            )}
 
             {/* Top 5 Products Detailed Behavior */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-8px' }}>
