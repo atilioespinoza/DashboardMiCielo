@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as ss from 'simple-statistics';
+import { getCache, setCache } from '@/lib/cache';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,6 +18,12 @@ export async function GET(request: Request) {
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - monthsBack);
   const startDateStr = startDate.toISOString().split('T')[0];
+
+  const cacheKey = `projections_monthly_v3_${monthsBack}`;
+  const cachedData = await getCache(cacheKey);
+  if (cachedData) {
+    return NextResponse.json({ success: true, data: cachedData, cached: true });
+  }
 
   try {
     const query = `
@@ -130,6 +137,7 @@ export async function GET(request: Request) {
           else if (upperName.includes("CUBRE PORTEO")) fullName = "Cubre Porteo (Total)";
           else if (upperName.includes("MOCHILA DE PORTEO BABY") || upperName.includes("MOCHILA BABY")) fullName = "Mochila Baby (Total)";
           else if (upperName.includes("UPA MAMI")) fullName = "Upa Mami (Total)";
+          else if (upperName.includes("COLUMPIO ERGONÓMICO") || upperName.includes("COLUMPIO ERGONOMICO")) fullName = "Columpio Ergonómico (Total)";
 
           stockMap[fullName] = (stockMap[fullName] || 0) + (variant.inventoryQuantity || 0);
         });
@@ -162,6 +170,7 @@ export async function GET(request: Request) {
         else if (upperName.includes("CUBRE PORTEO")) fullName = "Cubre Porteo (Total)";
         else if (upperName.includes("MOCHILA DE PORTEO BABY") || upperName.includes("MOCHILA BABY")) fullName = "Mochila Baby (Total)";
         else if (upperName.includes("UPA MAMI")) fullName = "Upa Mami (Total)";
+        else if (upperName.includes("COLUMPIO ERGONÓMICO") || upperName.includes("COLUMPIO ERGONOMICO")) fullName = "Columpio Ergonómico (Total)";
 
         const price = parseFloat(item.originalUnitPriceSet.shopMoney.amount) / 1.19;
         const cost = parseFloat(item.variant?.inventoryItem?.unitCost?.amount || "0") / 1.19;
@@ -245,21 +254,24 @@ export async function GET(request: Request) {
       })
     };
 
+    const finalData = {
+      overall: {
+        currentMonthEstimate: projections.totalSales,
+        currentMarginEstimate: projections.totalMargin,
+        history: totalSalesHistory
+      },
+      paretoAnalysis: {
+        topProductsCount: paretoProducts.length,
+        totalProductsCount: productStats.length,
+        products: projections.byProduct
+      }
+    };
+
+    await setCache(cacheKey, finalData, 21600); // 6 hours
+
     return NextResponse.json({
       success: true,
-      data: {
-        timeframe: `${monthsBack} months`,
-        overall: {
-          currentMonthEstimate: projections.totalSales,
-          currentMarginEstimate: projections.totalMargin,
-          history: totalSalesHistory
-        },
-        paretoAnalysis: {
-          topProductsCount: paretoProducts.length,
-          totalProductsCount: productStats.length,
-          products: projections.byProduct
-        }
-      }
+      data: finalData
     });
 
   } catch (error: any) {
