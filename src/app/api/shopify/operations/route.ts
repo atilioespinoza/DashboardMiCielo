@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export async function GET() {
   const shop = process.env.SHOPIFY_SHOP_NAME;
@@ -7,6 +8,12 @@ export async function GET() {
 
   if (!accessToken) {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
+  }
+
+  const cacheKey = 'operations_data';
+  const cachedData = await getCache(cacheKey);
+  if (cachedData) {
+    return NextResponse.json({ success: true, data: cachedData, cached: true });
   }
 
   try {
@@ -89,21 +96,26 @@ export async function GET() {
       status: node.displayFulfillmentStatus
     }));
 
+    const finalData = {
+      inventory: {
+        totalProducts: result.data.products?.edges.length || 0,
+        lowStock,
+        outOfStock,
+        totalVariants: allVariants.length,
+        topInventory: allVariants.sort((a, b) => b.inventory - a.inventory).slice(0, 5)
+      },
+      fulfillment: {
+        pendingCount: pendingOrders.length, // Using the count of local results as an approximation or just the length
+        recentPending: pendingFulfillments
+      }
+    };
+
+    await setCache(cacheKey, finalData, 21600); // 6 hours
+
     return NextResponse.json({
       success: true,
-      data: {
-        inventory: {
-          totalProducts: result.data.products?.edges.length || 0,
-          lowStock,
-          outOfStock,
-          totalVariants: allVariants.length,
-          topInventory: allVariants.sort((a, b) => b.inventory - a.inventory).slice(0, 5)
-        },
-        fulfillment: {
-          pendingCount: pendingOrders.length, // Using the count of local results as an approximation or just the length
-          recentPending: pendingFulfillments
-        }
-      }
+      data: finalData,
+      cached: false
     });
 
   } catch (error: any) {

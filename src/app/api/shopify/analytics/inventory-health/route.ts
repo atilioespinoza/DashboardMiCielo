@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export async function GET() {
   const shop = process.env.SHOPIFY_SHOP_NAME;
@@ -7,6 +8,12 @@ export async function GET() {
 
   if (!accessToken) {
     return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
+  }
+
+  const cacheKey = 'inventory_health_data';
+  const cachedData = await getCache(cacheKey);
+  if (cachedData) {
+    return NextResponse.json({ success: true, data: cachedData, cached: true });
   }
 
   try {
@@ -160,16 +167,21 @@ export async function GET() {
       });
     });
 
+    const finalData = {
+      health: result.sort((a, b) => b.sold90 - a.sold90),
+      summary: {
+        criticalStockouts: result.filter(r => r.status === 'CRITICAL').length,
+        deadStock: result.filter(r => r.status === 'DEAD').length,
+        avgRotation: (result.reduce((acc, r) => acc + parseFloat(r.turnover), 0) / result.length).toFixed(2)
+      }
+    };
+
+    await setCache(cacheKey, finalData, 21600); // 6 hours
+
     return NextResponse.json({
       success: true,
-      data: {
-        health: result.sort((a, b) => b.sold90 - a.sold90),
-        summary: {
-          criticalStockouts: result.filter(r => r.status === 'CRITICAL').length,
-          deadStock: result.filter(r => r.status === 'DEAD').length,
-          avgRotation: (result.reduce((acc, r) => acc + parseFloat(r.turnover), 0) / result.length).toFixed(2)
-        }
-      }
+      data: finalData,
+      cached: false
     });
 
   } catch (error: any) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -11,6 +12,12 @@ export async function GET(request: Request) {
 
     if (!accessToken) {
         return NextResponse.json({ success: false, message: "No API token" }, { status: 401 });
+    }
+
+    const cacheKey = `pareto_${startDate}_${endDate || 'now'}`;
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+        return NextResponse.json({ success: true, data: cachedData, cached: true });
     }
 
     try {
@@ -144,18 +151,23 @@ export async function GET(request: Request) {
             };
         });
 
+        const finalData = {
+            totalSales,
+            totalMargin,
+            paretoSales: paretoSales.filter(p => p.isPareto).slice(0, 30),
+            paretoMargin: paretoMargin.filter(p => p.isPareto).slice(0, 30),
+            summary: {
+                topProductsCount: paretoSales.filter(p => p.isPareto).length,
+                totalProductsCount: sortedBySales.length
+            }
+        };
+
+        await setCache(cacheKey, finalData, 21600); // 6 hours
+
         return NextResponse.json({
             success: true,
-            data: {
-                totalSales,
-                totalMargin,
-                paretoSales: paretoSales.filter(p => p.isPareto).slice(0, 30),
-                paretoMargin: paretoMargin.filter(p => p.isPareto).slice(0, 30),
-                summary: {
-                    topProductsCount: paretoSales.filter(p => p.isPareto).length,
-                    totalProductsCount: sortedBySales.length
-                }
-            }
+            data: finalData,
+            cached: false
         });
 
     } catch (error: any) {
