@@ -13,6 +13,7 @@ export default function Sidebar({ isOpen, activePillar, setActivePillar }: Sideb
     { id: 'commercial', label: 'Pilar Comercial', icon: <TrendingUp className="nav-icon" size={20} /> },
     { id: 'operational', label: 'Pilar Operacional', icon: <Package className="nav-icon" size={20} /> },
     { id: 'marketing', label: 'Pilar Marketing', icon: <Users className="nav-icon" size={20} /> },
+    { id: 'projections', label: 'Proyecciones', icon: <TrendingUp className="nav-icon" size={20} /> },
   ];
 
   return (
@@ -23,7 +24,7 @@ export default function Sidebar({ isOpen, activePillar, setActivePillar }: Sideb
         </div>
         <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Mi Cielo</h1>
       </div>
-      
+
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, paddingLeft: '12px', marginBottom: '8px' }}>
           Métricas
@@ -42,7 +43,7 @@ export default function Sidebar({ isOpen, activePillar, setActivePillar }: Sideb
           ))}
         </nav>
       </div>
-      
+
       <div style={{ marginTop: 'auto', padding: '0 16px 24px 16px' }}>
         <button className="nav-item" style={{ width: 'calc(100% - 32px)', textAlign: 'left' }}>
           <Settings className="nav-icon" size={20} />
