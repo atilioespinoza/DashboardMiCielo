@@ -35,7 +35,20 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const report = await generateSpecializedReport(type as any, dashboardData, pillarReports);
+        // Fetch custom context rules from DB if exists
+        let customContext = "";
+        try {
+            const contextResult = await sql`
+                SELECT content FROM ai_context_rules WHERE role = ${type} LIMIT 1
+            `;
+            if (contextResult.length > 0) {
+                customContext = contextResult[0].content;
+            }
+        } catch (dbError) {
+            console.error("Failed to fetch custom AI context:", dbError);
+        }
+
+        const report = await generateSpecializedReport(type as any, dashboardData, pillarReports, customContext);
 
         // Save to cloud (Neon)
         try {
