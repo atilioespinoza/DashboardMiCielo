@@ -161,7 +161,9 @@ export default function ExecutiveSummary() {
                     {[
                         { id: 'mtd', label: 'Este Mes' },
                         { id: 'this_week', label: 'Esta Semana' },
-                        { id: 'last_7d', label: 'Últimos 7 días' }
+                        { id: 'last_7d', label: 'Últimos 7 días' },
+                        { id: 'ytd', label: 'Este Año' },
+                        { id: '2025', label: 'Todo el 2025' }
                     ].map((p) => (
                         <button
                             key={p.id}

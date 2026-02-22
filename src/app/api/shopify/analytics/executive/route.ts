@@ -69,6 +69,20 @@ export async function GET(req: NextRequest) {
       prevStart.setDate(prevStart.getDate() - 7);
       prevEnd = new Date(currentStart);
       periodLabel = "Últimos 7 días";
+    } else if (period === 'ytd') {
+      currentStart = new Date(now.getFullYear(), 0, 1);
+      currentEnd = new Date(now);
+
+      prevStart = new Date(now.getFullYear() - 1, 0, 1);
+      prevEnd = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+      periodLabel = "Este Año";
+    } else if (period === '2025') {
+      currentStart = new Date(2025, 0, 1);
+      currentEnd = new Date(2025, 11, 31);
+
+      prevStart = new Date(2024, 0, 1);
+      prevEnd = new Date(2024, 11, 31);
+      periodLabel = "Año 2025";
     } else {
       // mtd
       currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -239,15 +253,32 @@ export async function GET(req: NextRequest) {
           value: dailyRevMap[dateStr] || (i <= now.getDate() ? 0 : null)
         });
       }
+    } else if (period === 'ytd' || period === '2025') {
+      const targetYear = period === '2025' ? 2025 : now.getFullYear();
+      for (let m = 0; m < 12; m++) {
+        let monthlySum = 0;
+        const daysInMonth = new Date(targetYear, m + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+          const ds = `${targetYear}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          monthlySum += dailyRevMap[ds] || 0;
+        }
+        const isFutureMonth = targetYear === now.getFullYear() && m > now.getMonth();
+        const monthName = new Date(targetYear, m, 1).toLocaleString('es-CL', { month: 'short' });
+        const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        chartData.push({
+          name: capitalizedMonth,
+          value: isFutureMonth ? null : monthlySum
+        });
+      }
     } else {
       // For week or last 7d, show the specific dates
       const daysToScan = period === 'this_week' ? 7 : 7;
       let scanDate = new Date(currentStart);
       for (let i = 0; i < daysToScan; i++) {
-        const ds = scanDate.toISOString().split('T')[0];
+        const strDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(scanDate);
         chartData.push({
-          name: scanDate.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric' }),
-          value: dailyRevMap[ds] || 0
+          name: scanDate.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', timeZone: 'America/Santiago' }),
+          value: dailyRevMap[strDate] || 0
         });
         scanDate.setDate(scanDate.getDate() + 1);
       }
