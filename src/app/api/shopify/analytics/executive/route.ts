@@ -149,10 +149,10 @@ export async function GET(req: NextRequest) {
     `;
 
     const variables = {
-      todayQuery: `created_at:>=${todayStart} status:any`,
-      currentQuery: `created_at:>=${currentStartISO} status:any`,
-      prevMonthQuery: `created_at:>=${prevMonthStartFullISO} created_at:<=${prevMonthEndFullISO} status:any`,
-      prevPeriodQuery: `created_at:>=${prevStartISO} created_at:<=${prevEndISO} status:any`
+      todayQuery: `created_at:>="${todayStart}" status:any`,
+      currentQuery: `created_at:>="${currentStartISO}" status:any`,
+      prevMonthQuery: `created_at:>="${prevMonthStartFullISO}" created_at:<="${prevMonthEndFullISO}" status:any`,
+      prevPeriodQuery: `created_at:>="${prevStartISO}" created_at:<="${prevEndISO}" status:any`
     };
 
     const response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
