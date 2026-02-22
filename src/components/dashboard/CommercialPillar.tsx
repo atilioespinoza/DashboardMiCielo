@@ -684,6 +684,25 @@ export default function CommercialPillar() {
                                     )}
                                 </React.Fragment>
                             ))}
+                            {isAddingCategory && (
+                                <tr className="category-row add-row" style={{ background: 'var(--bg-tertiary)' }}>
+                                    <td className="sticky-col" style={{ background: 'inherit' }}>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input
+                                                autoFocus
+                                                placeholder="Nombre de la categoría..."
+                                                value={newCategoryName}
+                                                onChange={e => setNewCategoryName(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && addCategory()}
+                                                style={{ padding: '4px 8px', border: '1px solid var(--brand-primary)', borderRadius: '6px', fontSize: '0.85rem', width: '200px', outline: 'none' }}
+                                            />
+                                            <Check size={16} style={{ color: 'var(--success)', cursor: 'pointer' }} onClick={() => addCategory()} />
+                                            <X size={16} style={{ color: 'var(--danger)', cursor: 'pointer' }} onClick={() => { setIsAddingCategory(false); setNewCategoryName(''); }} />
+                                        </div>
+                                    </td>
+                                    {visiblePeriods.map(p => <td key={p.id}></td>)}
+                                </tr>
+                            )}
 
                             {/* COST TOTALS & EBITDA */}
                             <tr style={{ background: 'var(--bg-tertiary)', fontWeight: 800 }}>
