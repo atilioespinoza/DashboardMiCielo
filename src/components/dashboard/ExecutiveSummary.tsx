@@ -14,7 +14,7 @@ import {
     PieChart, Pie
 } from 'recharts';
 import ReactMarkdown from 'react-markdown';
-import { BrainCircuit, X, History } from 'lucide-react';
+import { BrainCircuit, X as CloseIcon, History, Settings, Check } from 'lucide-react';
 import { ReportModal } from '../ui/ReportModal';
 
 export default function ExecutiveSummary() {
@@ -26,6 +26,12 @@ export default function ExecutiveSummary() {
     const [report, setReport] = useState<string | null>(null);
     const [showReport, setShowReport] = useState(false);
     const [generatingReport, setGeneratingReport] = useState(false);
+
+    // AI Context Settings
+    const [showContextModal, setShowContextModal] = useState(false);
+    const [aiContext, setAiContext] = useState('');
+    const [savingContext, setSavingContext] = useState(false);
+    const [loadingContext, setLoadingContext] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -45,6 +51,38 @@ export default function ExecutiveSummary() {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    const loadAIContext = async () => {
+        setLoadingContext(true);
+        try {
+            const res = await fetch('/api/ai/context?role=executive');
+            const data = await res.json();
+            if (data.success) {
+                setAiContext(data.context || '');
+            }
+        } catch (e) {
+            console.error("Failed to load AI context", e);
+        } finally {
+            setLoadingContext(false);
+        }
+    };
+
+    const saveAIContext = async () => {
+        setSavingContext(true);
+        try {
+            await fetch('/api/ai/context', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'executive', content: aiContext })
+            });
+            setShowContextModal(false);
+        } catch (e) {
+            console.error("Failed to save AI context", e);
+            alert("Error al guardar contexto.");
+        } finally {
+            setSavingContext(false);
+        }
+    };
 
     const generateAIReport = async () => {
         setGeneratingReport(true);
@@ -482,6 +520,23 @@ export default function ExecutiveSummary() {
                     >
                         <BrainCircuit size={16} /> INFORME CEO (IA)
                     </button>
+                    <button
+                        onClick={() => { setShowContextModal(true); loadAIContext(); }}
+                        title="Configurar Reglas del CEO (IA)"
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '30px',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <Settings size={16} />
+                    </button>
                     <div style={{ padding: '10px 24px', borderRadius: '30px', background: 'var(--bg-tertiary)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
                         SYNC: OK
                     </div>
@@ -501,6 +556,72 @@ export default function ExecutiveSummary() {
                 title="Informe Estratégico CEO"
                 subtitle="Visión Global y Salud del Negocio"
             />
+
+            {/* AI Context Settings Modal */}
+            {showContextModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{
+                        background: 'var(--bg-primary)', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '600px',
+                        boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '20px'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: 'var(--brand-primary)', padding: '10px', borderRadius: '12px' }}>
+                                    <BrainCircuit size={24} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Reglas y Contexto del CEO</h3>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Añade reglas de negocio ejecutivas.</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowContextModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>
+                                <CloseIcon size={24} />
+                            </button>
+                        </div>
+
+                        {loadingContext ? (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+                                <RefreshCw size={24} className="animate-spin" style={{ color: 'var(--text-tertiary)' }} />
+                            </div>
+                        ) : (
+                            <textarea
+                                value={aiContext}
+                                onChange={(e) => setAiContext(e.target.value)}
+                                placeholder="Ej: Analiza esto desde la perspectiva de expansión a un nuevo mercado..."
+                                style={{
+                                    width: '100%', height: '200px', padding: '16px', borderRadius: '12px',
+                                    border: '1px solid var(--border-color)', background: 'var(--bg-secondary)',
+                                    color: 'var(--text-primary)', fontSize: '0.9rem', resize: 'vertical', fontFamily: 'inherit',
+                                    outline: 'none', boxSizing: 'border-box'
+                                }}
+                            />
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' }}>
+                            <button
+                                onClick={() => setShowContextModal(false)}
+                                style={{ padding: '10px 20px', borderRadius: '30px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={saveAIContext}
+                                disabled={savingContext || loadingContext}
+                                style={{
+                                    padding: '10px 24px', borderRadius: '30px', background: 'var(--brand-primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+                                }}
+                            >
+                                {savingContext ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
+                                Guardar Reglas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 @keyframes fadeIn {
