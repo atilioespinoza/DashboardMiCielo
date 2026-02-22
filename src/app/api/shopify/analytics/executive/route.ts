@@ -21,59 +21,74 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const now = new Date();
-    let currentStart = new Date();
-    let currentEnd = new Date();
-    let prevStart = new Date();
-    let prevEnd = new Date();
+    const getChileDateStr = (date: Date) => {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+    };
+
+    const getShopifyISO = (dateStr: string, timeStr: string) => {
+      // Create a date roughly around that day to check Chile's offset (to handle DST changes natively)
+      const d = new Date(dateStr + "T12:00:00Z");
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Santiago', timeZoneName: 'shortOffset' }).formatToParts(d);
+      const tzPart = parts.find(p => p.type === 'timeZoneName')?.value; // e.g. "GMT-3"
+      let offset = "-03:00";
+      if (tzPart && tzPart !== 'GMT') {
+        offset = tzPart.replace('GMT', '');
+        if (!offset.includes(':')) offset += ':00';
+        if (offset.length === 5) offset = offset[0] + '0' + offset.substring(1); // e.g. "-3:00" -> "-03:00"
+      }
+      return `${dateStr}T${timeStr}${offset}`;
+    };
+
+    // Get the current Date in Chile time (to avoid server UTC giving us "tomorrow" if it's late night)
+    const chileNowStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false }).format(new Date());
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santiago' }));
+
+    let currentStart = new Date(now);
+    let currentEnd = new Date(now);
+    let prevStart = new Date(now);
+    let prevEnd = new Date(now);
     let periodLabel = "";
 
     if (period === 'this_week') {
-      // Current week (starting Monday)
       const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-      currentStart = new Date(now.setDate(diff));
-      currentStart.setHours(0, 0, 0, 0);
-      currentEnd = new Date();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      currentStart = new Date(now.getFullYear(), now.getMonth(), diff);
+      currentEnd = new Date(now);
 
-      // Previous week for comparison
       prevStart = new Date(currentStart);
       prevStart.setDate(prevStart.getDate() - 7);
       prevEnd = new Date(currentEnd);
       prevEnd.setDate(prevEnd.getDate() - 7);
       periodLabel = "Esta Semana";
     } else if (period === 'last_7d') {
-      currentStart = new Date();
+      currentStart = new Date(now);
       currentStart.setDate(currentStart.getDate() - 7);
-      currentStart.setHours(0, 0, 0, 0);
-      currentEnd = new Date();
+      currentEnd = new Date(now);
 
       prevStart = new Date(currentStart);
       prevStart.setDate(prevStart.getDate() - 7);
       prevEnd = new Date(currentStart);
-      prevEnd.setMilliseconds(-1);
       periodLabel = "Últimos 7 días";
     } else {
-      // Default: mtd
+      // mtd
       currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      currentEnd = new Date();
+      currentEnd = new Date(now);
 
       prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       prevEnd = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
       periodLabel = now.toLocaleString('es-CL', { month: 'long' });
     }
 
-    const currentStartISO = currentStart.toISOString();
-    const prevStartISO = prevStart.toISOString();
-    const prevEndISO = prevEnd.toISOString();
+    const currentStartISO = getShopifyISO(getChileDateStr(currentStart), "00:00:00");
+    const prevStartISO = getShopifyISO(getChileDateStr(prevStart), "00:00:00");
+    const prevEndISO = getShopifyISO(getChileDateStr(prevEnd), "23:59:59");
 
-    // Previous full month (always needed for the fixed goal card)
     const prevMonthStartFull = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthEndFull = new Date(now.getFullYear(), now.getMonth(), 0);
-    const prevMonthStartFullISO = prevMonthStartFull.toISOString();
-    const prevMonthEndFullISO = prevMonthEndFull.toISOString();
+    const prevMonthStartFullISO = getShopifyISO(getChileDateStr(prevMonthStartFull), "00:00:00");
+    const prevMonthEndFullISO = getShopifyISO(getChileDateStr(prevMonthEndFull), "23:59:59");
 
-    const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+    const todayStart = getShopifyISO(getChileDateStr(now), "00:00:00");
 
     const query = `
       query GetExecutiveData($todayQuery: String!, $currentQuery: String!, $prevMonthQuery: String!, $prevPeriodQuery: String!) {
@@ -177,7 +192,9 @@ export async function GET(req: NextRequest) {
         channelSales.other += amount;
       }
 
-      const dateKey = node.createdAt.split('T')[0];
+      const createdAtDate = new Date(node.createdAt);
+      const chileFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const dateKey = chileFormatter.format(createdAtDate);
       dailyRevMap[dateKey] = (dailyRevMap[dateKey] || 0) + amount;
 
       if (node.customer && node.customer.numberOfOrders > 1) recurringCustomerRev += amount;
@@ -211,13 +228,15 @@ export async function GET(req: NextRequest) {
     if (period === 'mtd') chartDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     else chartDays = 31; // fallback or just show the active ones
 
-    // If mtd, show the whole month. If week, just the week.
+    // If mtd, show the whole month.
     if (period === 'mtd') {
+      const targetYear = now.getFullYear();
+      const targetMonth = now.getMonth() + 1;
       for (let i = 1; i <= chartDays; i++) {
-        const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const dateStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         chartData.push({
           name: `${i}`,
-          value: dailyRevMap[dateStr] || (new Date(dateStr) <= new Date() ? 0 : null)
+          value: dailyRevMap[dateStr] || (i <= now.getDate() ? 0 : null)
         });
       }
     } else {
