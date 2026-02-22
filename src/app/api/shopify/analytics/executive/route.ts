@@ -180,9 +180,9 @@ export async function GET(req: NextRequest) {
 
     const [miscData, currentPeriodEdges, prevPeriodEdges, prevMonthEdges] = await Promise.all([
       fetchMisc(),
-      fetchPaginatedOrders(`created_at:>=${currentStartISO} status:any`, currentPeriodFields),
-      fetchPaginatedOrders(`created_at:>=${prevStartISO} created_at:<=${prevEndISO} status:any`, basicFields),
-      fetchPaginatedOrders(`created_at:>=${prevMonthStartFullISO} created_at:<=${prevMonthEndFullISO} status:any`, basicFields)
+      fetchPaginatedOrders(`created_at:>=\\"${currentStartISO}\\" status:any`, currentPeriodFields),
+      fetchPaginatedOrders(`created_at:>=\\"${prevStartISO}\\" created_at:<=\\"${prevEndISO}\\" status:any`, basicFields),
+      fetchPaginatedOrders(`created_at:>=\\"${prevMonthStartFullISO}\\" created_at:<=\\"${prevMonthEndFullISO}\\" status:any`, basicFields)
     ]);
 
     const { todayOrders, unfulfilledOrders, outOfStock } = miscData;
