@@ -1,8 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
 export type ReportType = 'executive' | 'commercial' | 'operational' | 'marketing';
 
 const PERSONAS = {
@@ -77,6 +74,14 @@ export async function generateSpecializedReport(
     `;
 
     try {
+        const apiKey = process.env.GEMINI_API_KEY || "";
+        if (!apiKey) {
+            throw new Error("No has configurado tu GEMINI_API_KEY en las variables de entorno de Vercel. Por favor agrégala para usar esta función.");
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
         const result = await model.generateContent(prompt);
         const response = result.response;
         return response.text();
