@@ -509,7 +509,7 @@ export default function CommercialPillar() {
             {/* Strategic KPI Cards Based on Discovery */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                 <Card
-                    title={`Ventas Brutas (${selectedYear})`}
+                    title={`Ventas Netas (${selectedYear})`}
                     value={formatCurrency(totalVentasAnual)}
                     icon={<TrendingUp size={20} style={{ color: 'var(--success)' }} />}
                     style={{ borderLeft: '4px solid var(--success)' }}
