@@ -277,8 +277,11 @@ export default function CommercialPillar() {
         setGeneratingReport(true);
         setShowReport(true);
         try {
+            // Filter out future empty months to avoid AI hallucinations
+            const activePeriods = processedData.filter(p => p.ventas > 0 || p.cost > 0 || p.totalCostosOperacionales > 0);
+
             const context = {
-                financial_summary: processedData.slice(-3), // Last 3 periods for trend
+                financial_summary: activePeriods.slice(-3), // Last 3 active periods for trend
                 categories: categories.map(c => ({ label: c.label, items: c.items.map(i => i.label) })),
                 top_product: topProduct,
                 channels: channelData

@@ -56,6 +56,11 @@ export async function generateSpecializedReport(
     ${JSON.stringify(data, null, 2)}
 
     TU MISIÓN ES GENERAR UN INFORME DE NIVEL EXPERTO CON FOCO EN ${persona.focus.toUpperCase()}.
+
+    CONTEXTO Y REGLAS DEL NEGOCIO (¡LEER ANTES DE ANALIZAR!):
+    1. Meses en cero o vacíos: "Mi Cielo" reporta datos reales hasta el presente mes. Si ves meses futuros (del año en curso o próximo) con ventas o costos en 0, ES PORQUE AÚN NO OCURREN. NO menciones que hay "falta de visibilidad", "vacío en proyección" o "budgeting deficiente". Simplemente ignora los meses futuros y céntrate en los meses que sí tienen datos.
+    2. Costurera y Producción Interna: La "Costurera" es una decisión estratégica. Su costo YA se descuenta directamente dentro del concepto de "Costo de Ventas" (COGS) de cada producto devuelto por Shopify al momento de vender, para transformarla en un costo variable sano. Si ves el ítem "Costurera" en M$0 bajo los Gastos Operacionales (Opex), no es un error ni asumas que es un costo fijo improductivo; significa que su costo operacional fue absorbido matemáticamente en el margen bruto del ítem "Upa Go!" o equivalentes.
+    3. Subsidio de envíos: Si logras detectar márgenes afectados por el subsidio de envíos, proporciona soluciones basadas en ticket promedio (AOV).
     
     SI ERES EL CEO: Sintetiza los reportes de tus directores. No repitas lo que ellos dijeron, sino que conecta los puntos (ej. cómo el marketing está afectando el flujo de caja o cómo los quiebres de stock están limitando el LTV).
 
