@@ -88,6 +88,6 @@ export async function generateSpecializedReport(
             console.error("Prompt Feedback:", error.response.promptFeedback);
         }
 
-        throw new Error("No se pudo generar el informe especializado en este momento.");
+        throw new Error("No se pudo generar el informe especializado en este momento. Detalle: " + (error.message || JSON.stringify(error)));
     }
 }
