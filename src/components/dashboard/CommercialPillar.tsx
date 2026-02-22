@@ -27,7 +27,7 @@ const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 
 export default function CommercialPillar() {
     const [periodicity, setPeriodicity] = useState<Periodicity>('monthly');
-    const [selectedYear, setSelectedYear] = useState(2025);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [editingCell, setEditingCell] = useState<{ itemId: string, periodId: string, type: 'cost' | 'bank' | 'category' } | null>(null);
     const [showSalesBreakdown, setShowSalesBreakdown] = useState(false);
 
@@ -150,7 +150,8 @@ export default function CommercialPillar() {
             }));
         }
         if (periodicity === 'yearly') {
-            return [2024, 2025, 2026].map(year => ({
+            const currentYear = new Date().getFullYear();
+            return [currentYear - 1, currentYear, currentYear + 1].map(year => ({
                 id: `${year}`,
                 label: `${year}`
             }));
@@ -523,9 +524,9 @@ export default function CommercialPillar() {
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                             style={{ border: 'none', background: 'transparent', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', outline: 'none', color: 'var(--text-primary)' }}
                         >
-                            <option value={2024}>Año 2024</option>
-                            <option value={2025}>Año 2025</option>
-                            <option value={2026}>Año 2026</option>
+                            {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(year => (
+                                <option key={year} value={year}>Año {year}</option>
+                            ))}
                         </select>
                     </div>
                     <button onClick={fetchShopifyData} className="compact-btn" style={{ background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
