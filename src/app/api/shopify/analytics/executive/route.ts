@@ -104,81 +104,91 @@ export async function GET(req: NextRequest) {
 
     const todayStart = getShopifyISO(getChileDateStr(now), "00:00:00");
 
-    const query = `
-      query GetExecutiveData($todayQuery: String!, $currentQuery: String!, $prevMonthQuery: String!, $prevPeriodQuery: String!) {
-        todayOrders: orders(first: 250, query: $todayQuery) {
-          edges {
-            node {
-              totalPriceSet { shopMoney { amount } }
+    const fetchPaginatedOrders = async (queryStr: string, fields: string) => {
+      let edges: any[] = [];
+      let hasNextPage = true;
+      let cursor = null;
+      let iterations = 0;
+
+      while (hasNextPage && iterations < 30) {
+        const gql = `
+          query GetOrders($cursor: String) {
+            orders(first: 250, after: $cursor, query: "${queryStr}") {
+              pageInfo { hasNextPage endCursor }
+              edges { node { ${fields} } }
             }
           }
-        }
-        currentPeriod: orders(first: 250, query: $currentQuery) {
-          edges {
-            node {
-              totalPriceSet { shopMoney { amount } }
-              sourceName
-              createdAt
-              customer {
-                numberOfOrders
-              }
-              lineItems(first: 50) {
-                edges {
-                  node {
-                    title
-                    quantity
-                    originalUnitPriceSet { shopMoney { amount } }
-                    image { url }
-                  }
-                }
-              }
+        `;
+        const resp: Response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
+          body: JSON.stringify({ query: gql, variables: { cursor } }),
+        });
+        const result: any = await resp.json();
+        if (result.errors) throw new Error(result.errors[0].message);
+        edges = edges.concat(result.data.orders.edges);
+        hasNextPage = result.data.orders.pageInfo.hasNextPage;
+        cursor = result.data.orders.pageInfo.endCursor;
+        iterations++;
+      }
+      return edges;
+    };
+
+    const fetchMisc = async () => {
+      const q = `
+          query GetMisc {
+            todayOrders: orders(first: 250, query: "created_at:>=^${todayStart}^ status:any") {
+              edges { node { totalPriceSet { shopMoney { amount } } } }
+            }
+            unfulfilledOrders: orders(first: 50, query: "fulfillment_status:unfulfilled OR fulfillment_status:partial") {
+              edges { node { id } }
+            }
+            outOfStock: products(first: 50, query: "inventory_total:<=0") {
+              edges { node { id } }
             }
           }
-        }
-        prevMonthFull: orders(first: 250, query: $prevMonthQuery) {
-          edges {
-            node {
-              totalPriceSet { shopMoney { amount } }
-            }
-          }
-        }
-        prevPeriod: orders(first: 250, query: $prevPeriodQuery) {
-          edges {
-            node {
-              totalPriceSet { shopMoney { amount } }
-            }
-          }
-        }
-        unfulfilledOrders: orders(first: 50, query: "fulfillment_status:unfulfilled OR fulfillment_status:partial") {
-          edges {
-            node { id }
-          }
-        }
-        outOfStock: products(first: 50, query: "inventory_total:<=0") {
-          edges {
-            node { id }
+        `.replace(/\^/g, '\\"');
+
+      const resp = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
+        body: JSON.stringify({ query: q }),
+      });
+      const result = await resp.json();
+      if (result.errors) throw new Error(result.errors[0].message);
+      return result.data;
+    };
+
+    const currentPeriodFields = `
+      totalPriceSet { shopMoney { amount } }
+      sourceName
+      createdAt
+      customer { numberOfOrders }
+      lineItems(first: 50) {
+        edges {
+          node {
+            title
+            quantity
+            originalUnitPriceSet { shopMoney { amount } }
+            image { url }
           }
         }
       }
     `;
 
-    const variables = {
-      todayQuery: `created_at:>="${todayStart}" status:any`,
-      currentQuery: `created_at:>="${currentStartISO}" status:any`,
-      prevMonthQuery: `created_at:>="${prevMonthStartFullISO}" created_at:<="${prevMonthEndFullISO}" status:any`,
-      prevPeriodQuery: `created_at:>="${prevStartISO}" created_at:<="${prevEndISO}" status:any`
-    };
+    const basicFields = `totalPriceSet { shopMoney { amount } }`;
 
-    const response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken },
-      body: JSON.stringify({ query, variables }),
-    });
+    const [miscData, currentPeriodEdges, prevPeriodEdges, prevMonthEdges] = await Promise.all([
+      fetchMisc(),
+      fetchPaginatedOrders(`created_at:>=${currentStartISO} status:any`, currentPeriodFields),
+      fetchPaginatedOrders(`created_at:>=${prevStartISO} created_at:<=${prevEndISO} status:any`, basicFields),
+      fetchPaginatedOrders(`created_at:>=${prevMonthStartFullISO} created_at:<=${prevMonthEndFullISO} status:any`, basicFields)
+    ]);
 
-    const result = await response.json();
-    if (result.errors) throw new Error(result.errors[0].message);
-
-    const { todayOrders, currentPeriod, prevMonthFull, prevPeriod, unfulfilledOrders, outOfStock } = result.data;
+    const { todayOrders, unfulfilledOrders, outOfStock } = miscData;
+    const currentPeriod = { edges: currentPeriodEdges };
+    const prevPeriod = { edges: prevPeriodEdges };
+    const prevMonthFull = { edges: prevMonthEdges };
 
     const dailySales = todayOrders.edges.reduce((acc: number, edge: any) => acc + parseFloat(edge.node.totalPriceSet.shopMoney.amount), 0);
 
