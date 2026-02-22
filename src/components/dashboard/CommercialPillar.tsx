@@ -517,8 +517,14 @@ export default function CommercialPillar() {
                 <Card
                     title="Margen Producto Promedio"
                     value={`${avgMargen.toFixed(1)}%`}
-                    icon={<Landmark size={20} style={{ color: 'var(--brand-primary)' }} />}
-                />
+                    icon={<Landmark size={20} style={{ color: avgMargen >= 65 ? 'var(--success)' : (avgMargen >= 50 ? 'var(--warning)' : 'var(--danger)') }} />}
+                    style={{ borderLeft: `4px solid ${avgMargen >= 65 ? 'var(--success)' : (avgMargen >= 50 ? 'var(--warning)' : 'var(--danger)')}` }}
+                >
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: avgMargen >= 65 ? 'var(--success)' : (avgMargen >= 50 ? 'var(--warning)' : 'var(--danger)') }}></div>
+                        Meta: 65% - 70% (Excelente)
+                    </div>
+                </Card>
                 <Card
                     title={channelData.pos > channelData.ecommerce ? "Dependencia Tienda Física" : "Dependencia Ecommerce"}
                     value={`${Math.max(channelData.pos, channelData.ecommerce)}%`}
@@ -614,11 +620,18 @@ export default function CommercialPillar() {
                             </tr>
                             <tr style={{ color: 'var(--brand-primary)', fontWeight: 700, fontSize: '0.75rem' }}>
                                 <td className="sticky-col">% MARGEN PRODUCTO</td>
-                                {processedData.map(d => (
-                                    <td key={d.id} style={{ textAlign: 'right' }}>
-                                        {d.ventas > 0 ? ((d.mgProducto / d.ventas) * 100).toFixed(1) : '0'}%
-                                    </td>
-                                ))}
+                                {processedData.map(d => {
+                                    const mPercent = d.ventas > 0 ? (d.mgProducto / d.ventas) * 100 : 0;
+                                    const dotColor = mPercent >= 65 ? 'var(--success)' : (mPercent >= 50 ? 'var(--warning)' : 'var(--danger)');
+                                    return (
+                                        <td key={d.id} style={{ textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: mPercent === 0 ? 'transparent' : dotColor }}></div>
+                                                {mPercent.toFixed(1)}%
+                                            </div>
+                                        </td>
+                                    );
+                                })}
                             </tr>
 
                             {/* COST CATEGORIES */}

@@ -142,8 +142,33 @@ export default function SalesProjections() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', marginBottom: '8px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
                             <Target size={16} /> Margen Proyectado
                         </div>
-                        <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-                            {formatCurrency(data.overall.currentMarginEstimate)}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                                {formatCurrency(data.overall.currentMarginEstimate)}
+                            </div>
+                            {data.overall.currentMonthEstimate > 0 && (
+                                (() => {
+                                    const percent = (data.overall.currentMarginEstimate / data.overall.currentMonthEstimate) * 100;
+                                    const isGreen = percent >= 65;
+                                    const isYellow = percent >= 50 && percent < 65;
+                                    const col = isGreen ? 'var(--success)' : (isYellow ? 'var(--warning)' : 'var(--danger)');
+                                    return (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 800, color: col,
+                                                padding: '4px 10px', backgroundColor: isGreen ? 'rgba(16, 185, 129, 0.1)' : (isYellow ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
+                                                borderRadius: '12px'
+                                            }}>
+                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: col }}></div>
+                                                {percent.toFixed(1)}%
+                                            </div>
+                                            <div style={{ fontSize: '0.65rem', color: col, fontWeight: 700, paddingLeft: '4px' }}>
+                                                {isGreen ? 'Meta Lograda' : 'Meta: 65% - 70%'}
+                                            </div>
+                                        </div>
+                                    )
+                                })()
+                            )}
                         </div>
                     </div>
                     <div style={{ paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

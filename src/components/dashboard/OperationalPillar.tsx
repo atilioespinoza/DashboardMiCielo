@@ -552,7 +552,20 @@ export default function OperationalPillar() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{ textAlign: 'right', padding: '12px 8px' }}>{formatCurrency(p.margin)}</td>
+                                            <td style={{ textAlign: 'right', padding: '12px 8px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                                    <span style={{ fontWeight: 800 }}>{formatCurrency(p.margin)}</span>
+                                                    {p.sales > 0 && !p.name.toUpperCase().includes('GIFT CARD') && (
+                                                        <div style={{
+                                                            display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 900,
+                                                            color: (p.margin / p.sales) >= 0.65 ? 'var(--success)' : ((p.margin / p.sales) >= 0.5 ? 'var(--warning)' : 'var(--danger)')
+                                                        }}>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: (p.margin / p.sales) >= 0.65 ? 'var(--success)' : ((p.margin / p.sales) >= 0.5 ? 'var(--warning)' : 'var(--danger)') }}></div>
+                                                            {((p.margin / p.sales) * 100).toFixed(1)}%
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td style={{ textAlign: 'right', padding: '12px 8px', fontWeight: 700 }}>{p.cumPercentage.toFixed(1)}%</td>
                                         </tr>
                                     ))}
