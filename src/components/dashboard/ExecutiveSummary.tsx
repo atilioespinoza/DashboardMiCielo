@@ -36,10 +36,21 @@ export default function ExecutiveSummary() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/shopify/analytics/executive?period=${period}`);
-            const json = await res.json();
-            if (json.success) {
-                setData(json.data);
+            const [execRes, projRes] = await Promise.all([
+                fetch(`/api/shopify/analytics/executive?period=${period}`),
+                fetch(`/api/shopify/analytics/projections?months=6`)
+            ]);
+            const execJson = await execRes.json();
+            const projJson = await projRes.json();
+
+            if (execJson.success) {
+                const updatedData = execJson.data;
+                if (updatedData && updatedData.alerts && projJson.success && projJson.data?.paretoAnalysis?.products) {
+                    const top10 = projJson.data.paretoAnalysis.products.slice(0, 10);
+                    const top10Stockouts = top10.filter((p: any) => p.stock <= 0).length;
+                    updatedData.alerts.stockouts = top10Stockouts;
+                }
+                setData(updatedData);
             }
         } catch (e) {
             console.error("Error fetching executive data", e);
@@ -340,9 +351,11 @@ export default function ExecutiveSummary() {
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
                             <span>Alertas:</span>
-                            <span style={{ fontWeight: 800, color: data?.alerts?.unfulfilled > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                                {data?.alerts?.unfulfilled > 0 ? `${data.alerts.unfulfilled} Pend.` : 'OK'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+                                {data?.alerts?.unfulfilled > 0 && <span style={{ color: 'var(--danger)' }}>{data.alerts.unfulfilled} Pend.</span>}
+                                {data?.alerts?.stockouts > 0 && <span style={{ color: 'var(--danger)' }}>{data.alerts.stockouts} Sin Stock</span>}
+                                {(!data?.alerts?.unfulfilled && !data?.alerts?.stockouts) && <span style={{ color: 'var(--success)' }}>OK</span>}
+                            </div>
                         </div>
                     </div>
                 </Card>
