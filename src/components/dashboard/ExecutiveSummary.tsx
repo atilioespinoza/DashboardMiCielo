@@ -267,7 +267,25 @@ export default function ExecutiveSummary() {
                     value={formatCurrency(data?.mtdTicket || 0)}
                     icon={<Target size={22} />}
                 >
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '4px' }}>eficiencia por transacción</div>
+                    <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 1, height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{
+                                width: `${Math.min(((data?.mtdTicket || 0) / 35000) * 100, 100)}%`,
+                                height: '100%',
+                                background: (data?.mtdTicket || 0) >= 35000 ? 'var(--success, #10b981)' : ((data?.mtdTicket || 0) >= 29000 ? '#f59e0b' : 'var(--danger, #ef4444)'),
+                                borderRadius: '4px',
+                                transition: 'width 0.5s ease'
+                            }}></div>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
+                            Meta: $35k
+                        </span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                        {(data?.mtdTicket || 0) >= 35000
+                            ? '✅ ¡Objetivo de Ticket superado!'
+                            : `Faltan ${formatCurrency(35000 - (data?.mtdTicket || 0))} para meta`}
+                    </div>
                 </Card>
 
                 <Card
