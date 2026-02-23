@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
             todayOrders: orders(first: 250, query: "created_at:>=^${todayStart}^ status:any") {
               edges { node { totalPriceSet { shopMoney { amount } } } }
             }
-            unfulfilledOrders: orders(first: 50, query: "fulfillment_status:unfulfilled OR fulfillment_status:partial") {
+            unfulfilledOrders: orders(first: 50, query: "status:open AND (fulfillment_status:unfulfilled OR fulfillment_status:partial)") {
               edges { node { id } }
             }
             outOfStock: products(first: 50, query: "inventory_total:<=0") {
