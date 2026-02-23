@@ -250,10 +250,10 @@ export default function SalesProjections() {
                 </Card>
             </div>
 
-            {/* Top 5 Products Detailed Behavior */}
+            {/* Top 10 Products Detailed Behavior */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '-8px' }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                    Comportamiento Individual: Top 5 Productos
+                    Comportamiento Individual: Top 10 Productos
                 </h3>
                 <select
                     value={months}
@@ -281,7 +281,7 @@ export default function SalesProjections() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-                {data.paretoAnalysis.products.slice(0, 5).map((p, i) => (
+                {data.paretoAnalysis.products.slice(0, 10).map((p, i) => (
                     <Card key={i} title={p.name} style={{ padding: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
