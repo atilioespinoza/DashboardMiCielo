@@ -307,17 +307,6 @@ export default function ExecutiveSummary() {
                 </Card>
 
                 <Card
-                    title="Meta Cierre Mes"
-                    value={data?.progressToPrevMonth ? `${data.progressToPrevMonth.toFixed(1)}%` : "0%"}
-                    icon={<TrendingUp size={22} style={{ color: '#10b981' }} />}
-                >
-                    <div style={{ marginTop: '12px', width: '100%', height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.min(data?.progressToPrevMonth || 0, 100)}%`, height: '100%', background: 'var(--success)', borderRadius: '4px' }}></div>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '8px' }}>objetivo vs facturación total mes pasado</div>
-                </Card>
-
-                <Card
                     title="Margen de Producto"
                     value={data?.productMargin ? `${data.productMargin.toFixed(1)}%` : "0%"}
                     icon={<Wallet size={22} />}
