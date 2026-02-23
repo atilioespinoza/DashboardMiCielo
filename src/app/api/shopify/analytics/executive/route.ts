@@ -164,6 +164,7 @@ export async function GET(req: NextRequest) {
 
     const currentPeriodFields = `
       totalPriceSet { shopMoney { amount } }
+      subtotalPriceSet { shopMoney { amount } }
       sourceName
       createdAt
       customer { numberOfOrders }
@@ -211,9 +212,14 @@ export async function GET(req: NextRequest) {
     let totalProductRevenue = 0;
     let totalProductCost = 0;
 
+    let pnlNetVentas = 0;
+    let pnlNetCosto = 0;
+
     currentPeriod.edges.forEach(({ node }: any) => {
       const amount = parseFloat(node.totalPriceSet.shopMoney.amount);
+      const subtotal = parseFloat(node.subtotalPriceSet?.shopMoney?.amount || "0");
       currentRevenue += amount;
+      pnlNetVentas += (subtotal / 1.19);
 
       const source = node.sourceName ? node.sourceName.toLowerCase() : 'other';
       const isWeb = source === 'web' || source === 'online_store' || source === 'shopify_draft_order';
@@ -238,10 +244,12 @@ export async function GET(req: NextRequest) {
       node.lineItems.edges.forEach((itemEdge: any) => {
         const item = itemEdge.node;
         const itemRev = parseFloat(item.originalUnitPriceSet.shopMoney.amount) * item.quantity;
-        const itemCost = parseFloat(item.variant?.inventoryItem?.unitCost?.amount || "0") * item.quantity;
+        const itemGrossCost = parseFloat(item.variant?.inventoryItem?.unitCost?.amount || "0");
+        const itemCost = itemGrossCost * item.quantity;
 
         totalProductRevenue += itemRev;
         totalProductCost += itemCost;
+        pnlNetCosto += (itemGrossCost / 1.19) * item.quantity;
 
         if (!productMap[item.title]) {
           productMap[item.title] = { qty: 0, rev: 0, img: item.image?.url || '' };
@@ -263,7 +271,7 @@ export async function GET(req: NextRequest) {
     const prevMonthTotal = prevMonthFull.edges.reduce((acc: number, edge: any) => acc + parseFloat(edge.node.totalPriceSet.shopMoney.amount), 0);
     const progressToPrevMonth = prevMonthTotal > 0 ? (currentRevenue / prevMonthTotal) * 100 : 0;
 
-    const productMargin = totalProductRevenue > 0 ? ((totalProductRevenue - totalProductCost) / totalProductRevenue) * 100 : 0;
+    const productMargin = pnlNetVentas > 0 ? ((pnlNetVentas - pnlNetCosto) / pnlNetVentas) * 100 : 0;
 
     // Chart Data (for selected period)
     const chartData = [];
@@ -336,7 +344,8 @@ export async function GET(req: NextRequest) {
         stockouts: outOfStock.edges.length
       },
       prevMonthTotal,
-      progressToPrevMonth: (currentRevenue / (prevMonthTotal || 1)) * 100
+      progressToPrevMonth: (currentRevenue / (prevMonthTotal || 1)) * 100,
+      productMargin
     };
 
     // Save to Cache (async, doesn't block response) 3600 seconds = 1 hour
