@@ -21,8 +21,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const getChileDateStr = (date: Date) => {
-      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+    const getSafeDateStr = (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     };
 
     const getShopifyISO = (dateStr: string, timeStr: string) => {
@@ -93,16 +96,16 @@ export async function GET(req: NextRequest) {
       periodLabel = now.toLocaleString('es-CL', { month: 'long' });
     }
 
-    const currentStartISO = getShopifyISO(getChileDateStr(currentStart), "00:00:00");
-    const prevStartISO = getShopifyISO(getChileDateStr(prevStart), "00:00:00");
-    const prevEndISO = getShopifyISO(getChileDateStr(prevEnd), "23:59:59");
+    const currentStartISO = getShopifyISO(getSafeDateStr(currentStart), "00:00:00");
+    const prevStartISO = getShopifyISO(getSafeDateStr(prevStart), "00:00:00");
+    const prevEndISO = getShopifyISO(getSafeDateStr(prevEnd), "23:59:59");
 
     const prevMonthStartFull = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthEndFull = new Date(now.getFullYear(), now.getMonth(), 0);
-    const prevMonthStartFullISO = getShopifyISO(getChileDateStr(prevMonthStartFull), "00:00:00");
-    const prevMonthEndFullISO = getShopifyISO(getChileDateStr(prevMonthEndFull), "23:59:59");
+    const prevMonthStartFullISO = getShopifyISO(getSafeDateStr(prevMonthStartFull), "00:00:00");
+    const prevMonthEndFullISO = getShopifyISO(getSafeDateStr(prevMonthEndFull), "23:59:59");
 
-    const todayStart = getShopifyISO(getChileDateStr(now), "00:00:00");
+    const todayStart = getShopifyISO(getSafeDateStr(now), "00:00:00");
 
     const fetchPaginatedOrders = async (queryStr: string, fields: string) => {
       let edges: any[] = [];
