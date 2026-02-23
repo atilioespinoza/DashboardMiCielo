@@ -174,6 +174,11 @@ export async function GET(req: NextRequest) {
             quantity
             originalUnitPriceSet { shopMoney { amount } }
             image { url }
+            variant {
+              inventoryItem {
+                unitCost { amount }
+              }
+            }
           }
         }
       }
@@ -203,6 +208,9 @@ export async function GET(req: NextRequest) {
     let recurringCustomerRev = 0;
     const productMap: Record<string, { qty: number, rev: number, img: string }> = {};
 
+    let totalProductRevenue = 0;
+    let totalProductCost = 0;
+
     currentPeriod.edges.forEach(({ node }: any) => {
       const amount = parseFloat(node.totalPriceSet.shopMoney.amount);
       currentRevenue += amount;
@@ -230,6 +238,11 @@ export async function GET(req: NextRequest) {
       node.lineItems.edges.forEach((itemEdge: any) => {
         const item = itemEdge.node;
         const itemRev = parseFloat(item.originalUnitPriceSet.shopMoney.amount) * item.quantity;
+        const itemCost = parseFloat(item.variant?.inventoryItem?.unitCost?.amount || "0") * item.quantity;
+
+        totalProductRevenue += itemRev;
+        totalProductCost += itemCost;
+
         if (!productMap[item.title]) {
           productMap[item.title] = { qty: 0, rev: 0, img: item.image?.url || '' };
         }
@@ -248,6 +261,9 @@ export async function GET(req: NextRequest) {
     const revenueGrowth = prevPeriodRevenue > 0 ? ((currentRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 100 : 0;
 
     const prevMonthTotal = prevMonthFull.edges.reduce((acc: number, edge: any) => acc + parseFloat(edge.node.totalPriceSet.shopMoney.amount), 0);
+    const progressToPrevMonth = prevMonthTotal > 0 ? (currentRevenue / prevMonthTotal) * 100 : 0;
+
+    const productMargin = totalProductRevenue > 0 ? ((totalProductRevenue - totalProductCost) / totalProductRevenue) * 100 : 0;
 
     // Chart Data (for selected period)
     const chartData = [];

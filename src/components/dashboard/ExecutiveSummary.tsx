@@ -317,6 +317,32 @@ export default function ExecutiveSummary() {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '8px' }}>objetivo vs facturación total mes pasado</div>
                 </Card>
 
+                <Card
+                    title="Margen de Producto"
+                    value={data?.productMargin ? `${data.productMargin.toFixed(1)}%` : "0%"}
+                    icon={<Wallet size={22} />}
+                >
+                    <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 1, height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{
+                                width: `${Math.min(((data?.productMargin || 0) / 65) * 100, 100)}%`,
+                                height: '100%',
+                                background: (data?.productMargin || 0) >= 65 ? 'var(--success, #10b981)' : ((data?.productMargin || 0) >= 50 ? '#f59e0b' : 'var(--danger, #ef4444)'),
+                                borderRadius: '4px',
+                                transition: 'width 0.5s ease'
+                            }}></div>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)' }}>
+                            Meta: 65%
+                        </span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                        {(data?.productMargin || 0) >= 65
+                            ? '✅ ¡Margen saludable!'
+                            : `Falta ${(65 - (data?.productMargin || 0)).toFixed(1)}% para rentabilidad óptima`}
+                    </div>
+                </Card>
+
                 <Card title="Salud de Marca" icon={<UserPlus size={22} />}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
