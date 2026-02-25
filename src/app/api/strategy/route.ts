@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db';
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -10,21 +10,18 @@ export async function GET(req: Request) {
     }
 
     try {
-        const strategiesQuery = await sql`
+        const strategies = await sql`
             SELECT id, title, description, pillar, status, created_at FROM strategies 
             WHERE pillar = ${pillar} 
             ORDER BY created_at DESC
         `;
 
-        const tasksQuery = await sql`
+        const tasks = await sql`
             SELECT t.id, t.strategy_id, t.title, t.is_completed, t.created_at FROM tasks t
             JOIN strategies s ON t.strategy_id = s.id
             WHERE s.pillar = ${pillar}
             ORDER BY t.created_at ASC
         `;
-
-        const strategies = strategiesQuery.rows;
-        const tasks = tasksQuery.rows;
 
         // Group tasks by strategy_id
         const strategiesWithTasks = strategies.map(strategy => ({
@@ -80,7 +77,7 @@ export async function POST(req: Request) {
             RETURNING id, title, description, pillar, status, created_at
         `;
 
-        return NextResponse.json({ success: true, data: { ...result.rows[0], tasks: [] } });
+        return NextResponse.json({ success: true, data: { ...result[0], tasks: [] } });
     } catch (e) {
         console.error("Error creating strategy:", e);
         return NextResponse.json({ error: "Failed to create strategy" }, { status: 500 });
@@ -103,7 +100,7 @@ export async function PUT(req: Request) {
             RETURNING id, title, description, pillar, status, created_at
         `;
 
-        return NextResponse.json({ success: true, data: result.rows[0] });
+        return NextResponse.json({ success: true, data: result[0] });
     } catch (e) {
         console.error("Error updating strategy:", e);
         return NextResponse.json({ error: "Failed to update strategy" }, { status: 500 });

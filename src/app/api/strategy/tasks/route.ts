@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db';
 
 export async function POST(req: Request) {
     try {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
             RETURNING id, strategy_id, title, is_completed, created_at
         `;
 
-        return NextResponse.json({ success: true, data: result.rows[0] });
+        return NextResponse.json({ success: true, data: result[0] });
     } catch (e) {
         console.error("Error creating task:", e);
         return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
@@ -58,7 +58,7 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
         }
 
-        return NextResponse.json({ success: true, data: result.rows[0] });
+        return NextResponse.json({ success: true, data: result[0] });
     } catch (e) {
         console.error("Error updating task:", e);
         return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
