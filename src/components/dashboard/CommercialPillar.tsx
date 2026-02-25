@@ -5,8 +5,9 @@ import { Card } from '../ui/Card';
 import { ShoppingBag, ChevronDown, ChevronRight, Plus, X, Edit2, Check, RefreshCw, Calendar, HelpCircle, ArrowUpRight, ArrowDownRight, TrendingUp, Trash2, Landmark, History, Settings } from 'lucide-react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ReactMarkdown from 'react-markdown';
-import { BrainCircuit, X as CloseIcon } from 'lucide-react';
 import { ReportModal } from '../ui/ReportModal';
+import { StrategyCenter } from './StrategyCenter';
+import { BrainCircuit, X as CloseIcon } from 'lucide-react';
 
 type Periodicity = 'monthly' | 'quarterly' | 'yearly';
 
@@ -897,6 +898,9 @@ export default function CommercialPillar() {
                 title="Informe Estratégico CFO"
                 subtitle="Inteligencia Financiera y Rentabilidad"
             />
+
+            {/* Strategy and Action Center */}
+            <StrategyCenter pillar="commercial" />
 
             {/* AI Context Settings Modal */}
             {showContextModal && (
