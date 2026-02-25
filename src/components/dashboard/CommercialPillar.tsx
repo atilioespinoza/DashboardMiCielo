@@ -151,7 +151,7 @@ export default function CommercialPillar() {
         }
         if (periodicity === 'yearly') {
             const currentYear = new Date().getFullYear();
-            return [currentYear - 1, currentYear, currentYear + 1].map(year => ({
+            return [currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(year => ({
                 id: `${year}`,
                 label: `${year}`
             }));
@@ -524,7 +524,7 @@ export default function CommercialPillar() {
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                             style={{ border: 'none', background: 'transparent', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', outline: 'none', color: 'var(--text-primary)' }}
                         >
-                            {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(year => (
+                            {[new Date().getFullYear() - 2, new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(year => (
                                 <option key={year} value={year}>Año {year}</option>
                             ))}
                         </select>
