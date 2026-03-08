@@ -8,6 +8,7 @@ import CommercialPillar from '@/components/dashboard/CommercialPillar';
 import OperationalPillar from '@/components/dashboard/OperationalPillar';
 import MarketingPillar from '@/components/dashboard/MarketingPillar';
 import SalesProjections from '@/components/dashboard/SalesProjections';
+import ProductFinder from '@/components/dashboard/ProductFinder';
 
 export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,6 +30,8 @@ export default function DashboardPage() {
         return <MarketingPillar />;
       case 'projections':
         return <SalesProjections />;
+      case 'product-finder':
+        return <ProductFinder />;
       default:
         return <ExecutiveSummary />;
     }
@@ -41,6 +44,7 @@ export default function DashboardPage() {
       case 'operational': return 'Pilar Operacional (Inventario)';
       case 'marketing': return 'Pilar Marketing (Clientes)';
       case 'projections': return 'Proyecciones y Análisis de Ventas';
+      case 'product-finder': return 'Analista de Tendencias Multicanal';
       default: return 'Dashboard';
     }
   };

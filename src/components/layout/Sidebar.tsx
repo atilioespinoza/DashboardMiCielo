@@ -14,6 +14,7 @@ export default function Sidebar({ isOpen, activePillar, setActivePillar }: Sideb
     { id: 'operational', label: 'Pilar Operacional', icon: <Package className="nav-icon" size={20} /> },
     { id: 'marketing', label: 'Pilar Marketing', icon: <Users className="nav-icon" size={20} /> },
     { id: 'projections', label: 'Proyecciones', icon: <TrendingUp className="nav-icon" size={20} /> },
+    { id: 'product-finder', label: 'Buscador de Productos', icon: <Search className="nav-icon" size={20} /> },
   ];
 
   return (
