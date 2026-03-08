@@ -6,27 +6,33 @@ const apiKey = process.env.GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function POST(req: Request) {
-    try {
-        if (!apiKey) {
-            return NextResponse.json(
-                { error: 'GEMINI_API_KEY no está configurada.' },
-                { status: 500 }
-            );
-        }
+  try {
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'GEMINI_API_KEY no está configurada.' },
+        { status: 500 }
+      );
+    }
 
-        const { niche } = await req.json();
+    const { niche, strategy = 'standard' } = await req.json();
 
-        if (!niche) {
-            return NextResponse.json(
-                { error: 'El nicho es requerido.' },
-                { status: 400 }
-            );
-        }
+    if (!niche) {
+      return NextResponse.json(
+        { error: 'El nicho es requerido.' },
+        { status: 400 }
+      );
+    }
 
-        const prompt = `
+    const strategyPrompt = strategy === 'blue_ocean'
+      ? 'ENFOQUE ESTRATÉGICO OBLIGATORIO: "OCÉANO AZUL" E INCIPIENTES. Busca específicamente productos con ALTA DEMANDA pero POCA OFERTA. Productos que recién están naciendo como tendencia o que resuelven un problema donde el mercado actual es ineficiente o las opciones son de mala calidad. Evita productos saturados. Prioriza la novedad y el alto margen de oportunidad.'
+      : 'ENFOQUE ESTRATÉGICO: Productos probados, rentables y escalables dentro de esta categoría.';
+
+    const prompt = `
       Actúa como el "Analista de Tendencias Multicanal", un experto de clase mundial en e-commerce, dropshipping e importación, con la habilidad de cruzar datos de múltiples plataformas (TikTok, Instagram, AliExpress, Mercado Libre, Foros/Reddit y Aduanas).
 
       El usuario está buscando ideas de productos ganadores para el siguiente nicho, problema o categoría: "${niche}".
+      
+      ${strategyPrompt}
 
       TU MISIÓN:
       Sugiere exactamente 3 ideas de productos altamente rentables y escalables dentro de esa categoría.
@@ -72,33 +78,33 @@ export async function POST(req: Request) {
       }
     `;
 
-        // Usamos el modelo flash-preview
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-3-flash-preview',
-            generationConfig: {
-                responseMimeType: "application/json",
-            }
-        });
+    // Usamos el modelo flash-preview
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview',
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    });
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
 
-        try {
-            const parsedData = JSON.parse(responseText);
-            return NextResponse.json(parsedData);
-        } catch (parseError) {
-            console.error('Error parsing JSON from Gemini:', responseText);
-            return NextResponse.json(
-                { error: 'La IA devolvió un formato inválido. Por favor intenta de nuevo.' },
-                { status: 500 }
-            );
-        }
-
-    } catch (error: any) {
-        console.error('Error in Product Finder API:', error);
-        return NextResponse.json(
-            { error: error.message || 'Error interno del servidor al procesar tu solicitud.' },
-            { status: 500 }
-        );
+    try {
+      const parsedData = JSON.parse(responseText);
+      return NextResponse.json(parsedData);
+    } catch (parseError) {
+      console.error('Error parsing JSON from Gemini:', responseText);
+      return NextResponse.json(
+        { error: 'La IA devolvió un formato inválido. Por favor intenta de nuevo.' },
+        { status: 500 }
+      );
     }
+
+  } catch (error: any) {
+    console.error('Error in Product Finder API:', error);
+    return NextResponse.json(
+      { error: error.message || 'Error interno del servidor al procesar tu solicitud.' },
+      { status: 500 }
+    );
+  }
 }

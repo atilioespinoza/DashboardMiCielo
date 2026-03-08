@@ -17,6 +17,7 @@ interface ProductIdea {
 
 export default function ProductFinder() {
     const [niche, setNiche] = useState('');
+    const [strategy, setStrategy] = useState('blue_ocean');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<ProductIdea[] | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function ProductFinder() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ niche }),
+                body: JSON.stringify({ niche, strategy }),
             });
 
             if (!response.ok) {
@@ -64,55 +65,102 @@ export default function ProductFinder() {
             </div>
 
             <div className="card" style={{ padding: '32px', marginBottom: '40px', background: 'linear-gradient(145deg, var(--bg-card), rgba(var(--brand-primary-rgb), 0.05))' }}>
-                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '16px', maxWidth: '800px', margin: '0 auto' }}>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                        <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}>
-                            <Search size={20} />
+                <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px', margin: '0 auto' }}>
+
+                    <div style={{ display: 'flex', gap: '16px', flexDirection: 'column' }}>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}>
+                                <Search size={20} />
+                            </div>
+                            <input
+                                type="text"
+                                value={niche}
+                                onChange={(e) => setNiche(e.target.value)}
+                                placeholder="Ej. Artículos para mascotas que resuelven ansiedad..."
+                                style={{
+                                    width: '100%',
+                                    padding: '16px 16px 16px 48px',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-card)',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '1.1rem',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s, box-shadow 0.2s'
+                                }}
+                                required
+                            />
                         </div>
-                        <input
-                            type="text"
-                            value={niche}
-                            onChange={(e) => setNiche(e.target.value)}
-                            placeholder="Ej. Artículos para mascotas que resuelven ansiedad..."
-                            style={{
-                                width: '100%',
-                                padding: '16px 16px 16px 48px',
-                                borderRadius: '12px',
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-card)',
-                                color: 'var(--text-primary)',
-                                fontSize: '1.1rem',
-                                outline: 'none',
-                                transition: 'border-color 0.2s, box-shadow 0.2s'
-                            }}
-                            required
-                        />
+
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <div style={{ flex: 1, display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setStrategy('standard')}
+                                    style={{
+                                        flex: 1,
+                                        minWidth: '200px',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        border: strategy === 'standard' ? '2px solid var(--brand-primary)' : '1px solid var(--border-color)',
+                                        backgroundColor: strategy === 'standard' ? 'rgba(var(--brand-primary-rgb), 0.1)' : 'transparent',
+                                        color: strategy === 'standard' ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    Tendencias Probadas
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStrategy('blue_ocean')}
+                                    style={{
+                                        flex: 1,
+                                        minWidth: '200px',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        border: strategy === 'blue_ocean' ? '2px solid #3b82f6' : '1px solid var(--border-color)',
+                                        backgroundColor: strategy === 'blue_ocean' ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                        color: strategy === 'blue_ocean' ? '#3b82f6' : 'var(--text-secondary)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    🚀 Océanos Azules (Incipientes)
+                                </button>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                style={{
+                                    padding: '0 32px',
+                                    height: '48px',
+                                    borderRadius: '12px',
+                                    backgroundColor: 'var(--brand-primary)',
+                                    color: 'white',
+                                    fontWeight: 600,
+                                    fontSize: '1.1rem',
+                                    border: 'none',
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    opacity: loading ? 0.7 : 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    transition: 'transform 0.2s, opacity 0.2s',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {loading ? (
+                                    <>Analizando...</>
+                                ) : (
+                                    <>Generar Ideas</>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            padding: '0 32px',
-                            borderRadius: '12px',
-                            backgroundColor: 'var(--brand-primary)',
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '1.1rem',
-                            border: 'none',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            opacity: loading ? 0.7 : 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'transform 0.2s, opacity 0.2s'
-                        }}
-                    >
-                        {loading ? (
-                            <>Analizando...</>
-                        ) : (
-                            <>Generar Ideas</>
-                        )}
-                    </button>
                 </form>
             </div>
 
